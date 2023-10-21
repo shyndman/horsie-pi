@@ -1,0 +1,18 @@
+[package]
+name = "hp-embedded-drivers"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bondrewd = { version = "0.1.14", default-features = false, features = [
+  "derive",
+  "hex_fns",
+  "slice_fns",
+] }
+defmt = { version = "0.3.2", optional = true }
+embedded-hal-async = "1.0.0-rc.1"
+paste = "1.0"
+
+[features]
+default = ["defmt"]
+defmt = ["dep:defmt"]

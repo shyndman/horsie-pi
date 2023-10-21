@@ -1,0 +1,3 @@
+[workspace]
+members = ["embedded-drivers"]
+resolver = "2"
