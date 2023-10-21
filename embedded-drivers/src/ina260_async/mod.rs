@@ -1,7 +1,5 @@
 //! Asynchronous I2C Driver for the TI INA260 current and power sensor
 
-#![no_std]
-
 pub mod error;
 pub mod reg;
 

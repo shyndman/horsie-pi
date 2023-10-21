@@ -1,7 +1,5 @@
 //! Asynchronous I2C Driver for the Hynetek HUSB238 current and power sensor
 
-#![no_std]
-
 pub mod error;
 pub mod reg;
 
@@ -50,7 +48,7 @@ where
     // pub async fn get_pd_src_current(&mut self) -> Result<SourceCurrent, Error<E>> {}
     // pub async fn get_selected_pd(&mut self) -> Result<SourceVoltage, Error<E>> {}
 
-    pub async fn select_pd(&mut self, pd: SourceVoltage) {}
+    pub async fn select_pd(&mut self, _pd: SourceVoltage) {}
     pub async fn reset(&mut self) {}
     pub async fn request_pd(&mut self) {}
     pub async fn get_source_capabilities(&mut self) {}
