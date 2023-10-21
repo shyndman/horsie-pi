@@ -1,0 +1,18 @@
+{
+  "evenBetterToml.formatter.columnWidth": 400,
+  "evenBetterToml.formatter.compactInlineTables": true,
+  "evenBetterToml.formatter.reorderArrays": true,
+  "evenBetterToml.formatter.compactArrays": true,
+  "evenBetterToml.formatter.arrayTrailingComma": false,
+  "evenBetterToml.formatter.arrayAutoCollapse": true,
+  "evenBetterToml.formatter.allowedBlankLines": 1,
+  "evenBetterToml.formatter.alignEntries": true,
+  "evenBetterToml.formatter.alignComments": true,
+  "evenBetterToml.formatter.compactEntries": true,
+  "evenBetterToml.formatter.indentTables": false,
+  "evenBetterToml.formatter.reorderKeys": true,
+  "evenBetterToml.formatter.trailingNewline": true,
+  "evenBetterToml.schema.enabled": false,
+  "evenBetterToml.schema.links": true,
+  "evenBetterToml.taplo.configFile.enabled": false,
+}
