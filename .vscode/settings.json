@@ -8,7 +8,7 @@
   "evenBetterToml.formatter.allowedBlankLines": 1,
   "evenBetterToml.formatter.alignEntries": true,
   "evenBetterToml.formatter.alignComments": true,
-  "evenBetterToml.formatter.compactEntries": true,
+  "evenBetterToml.formatter.compactEntries": false,
   "evenBetterToml.formatter.indentTables": false,
   "evenBetterToml.formatter.reorderKeys": true,
   "evenBetterToml.formatter.trailingNewline": true,

@@ -1,5 +1,4 @@
 [target.'cfg(all(target_arch = "arm", target_os = "none"))']
-# runner = "elf2uf2-rs --deploy --serial"
 runner = "probe-run --chip RP2040"
 rustflags = ["--cfg", "portable_atomic_no_outline_atomics"]
 
@@ -9,9 +8,6 @@ target = "thumbv6m-none-eabi" # Cortex-M0 and Cortex-M0+
 [env]
 DEFMT_LOG = "debug"
 
-[unstable]
-build-std = ["core", "alloc"]
-
 [profile.dev]
 debug = 2
 
@@ -20,3 +16,6 @@ opt-level = "z"
 
 [profile.release]
 debug = 1
+
+[unstable]
+build-std = ["core", "alloc"]
