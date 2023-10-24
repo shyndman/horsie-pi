@@ -33,8 +33,11 @@ use esp32s3_hal::{
 use esp_hal_procmacros::main;
 use esp_hal_smartled::{smartLedAdapter, SmartLedsAdapter};
 use esp_println::logger::init_logger_from_env;
-use hp_embedded_drivers::ina260_async::Ina260;
-use peripheral_controller::{init_heap, ui::rgb_button::RgbButton};
+use hp_embedded_drivers::{husb238_async::Husb238, ina260_async::Ina260};
+use peripheral_controller::{
+    init_heap,
+    ui::rgb_button::RgbButton,
+};
 use smart_leds::{brightness, colors};
 use smart_leds_trait::*;
 use static_cell::make_static;
@@ -167,14 +170,26 @@ async fn main(spawner: Spawner) {
 #[embassy_executor::task]
 async fn read_power_metrics(i2c0: I2C<'static, esp32s3_hal::peripherals::I2C0>) {
     Timer::after(Duration::from_secs(2)).await;
-    defmt::info!("Attempting to communicate with INA260");
 
     let i2c0_bus: &'static mut Mutex<
         CriticalSectionRawMutex,
         I2C<'static, esp32s3_hal::peripherals::I2C0>,
     > = make_static!({ Mutex::<CriticalSectionRawMutex, _>::new(i2c0) });
 
+    defmt::info!("Attempting to communicate with INA260");
     let mut ina260 = match Ina260::new(I2cDevice::new(i2c0_bus)).await {
+        Ok(device) => {
+            defmt::info!("Established contact");
+            device
+        }
+        Err(e) => {
+            defmt::error!("ERROR, {}", Debug2Format(&e));
+            return;
+        }
+    };
+
+    defmt::info!("Attempting to communicate with HUSB238");
+    let husb238 = match Husb238::new(I2cDevice::new(i2c0_bus)).await {
         Ok(device) => {
             defmt::info!("Established contact");
             device

@@ -20,11 +20,13 @@ where
     BUS: I2c<Error = E>,
     E: Into<Error<E>> + Debug,
 {
-    pub async fn new(bus: BUS) -> Self {
-        Self {
+    pub async fn new(bus: BUS) -> Result<Self, Error<E>> {
+        let mut device = Self {
             address: DEFAULT_I2C_ADDRESS,
             bus,
-        }
+        };
+        device.get_5v_contract_voltage().await?;
+        Ok(device)
     }
 
     pub async fn is_attached(&mut self) -> Result<bool, Error<E>> {
