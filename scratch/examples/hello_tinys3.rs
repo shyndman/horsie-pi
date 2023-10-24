@@ -19,9 +19,9 @@ use esp32s3_hal::{
     system::SystemParts,
     Rmt, IO,
 };
-use esp_backtrace as _;
 use esp_hal_procmacros::main;
 use esp_hal_smartled::{smartLedAdapter, SmartLedsAdapter};
+use scratch as _;
 use smart_leds::brightness;
 use smart_leds_trait::*;
 
