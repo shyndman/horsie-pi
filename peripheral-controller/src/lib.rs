@@ -11,6 +11,7 @@
 #![test_runner(run_tests)]
 
 pub mod panic;
+pub mod ui;
 
 use core::mem::MaybeUninit;
 
