@@ -3,7 +3,6 @@
 #![feature(async_fn_in_trait, impl_trait_projections, type_alias_impl_trait)]
 
 extern crate alloc;
-use core::mem::MaybeUninit;
 
 use defmt::Debug2Format;
 use defmt_macros::unwrap;
@@ -27,22 +26,10 @@ use esp_hal_procmacros::main;
 use esp_hal_smartled::{smartLedAdapter, SmartLedsAdapter};
 use esp_println::logger::init_logger_from_env;
 use hp_embedded_drivers::ina260_async::Ina260;
-use peripheral_controller as _;
+use peripheral_controller::{self as _, init_heap};
 use smart_leds::brightness;
 use smart_leds_trait::*;
 use static_cell::make_static;
-
-#[global_allocator]
-static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
-
-fn init_heap() {
-    const HEAP_SIZE: usize = 32 * 1024;
-    static mut HEAP: MaybeUninit<[u8; HEAP_SIZE]> = MaybeUninit::uninit();
-
-    unsafe {
-        ALLOCATOR.init(HEAP.as_mut_ptr() as *mut u8, HEAP_SIZE);
-    }
-}
 
 #[embassy_executor::task]
 async fn run_color_wheel(
