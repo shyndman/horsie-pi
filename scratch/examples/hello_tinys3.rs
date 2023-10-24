@@ -10,8 +10,14 @@ use defmt_macros::unwrap;
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
 use esp32s3_hal::{
-    self, clock::ClockControl, embassy, entry, peripherals::Peripherals, prelude::*,
-    system::SystemParts, Rmt, IO,
+    self,
+    clock::ClockControl,
+    embassy, entry,
+    gpio::{AnyPin, Gpio18, Output, PushPull},
+    peripherals::Peripherals,
+    prelude::*,
+    system::SystemParts,
+    Rmt, IO,
 };
 use esp_backtrace as _;
 use esp_hal_procmacros::main;
@@ -31,8 +37,30 @@ fn init_heap() {
     }
 }
 
+#[embassy_executor::task]
+async fn run_color_wheel(
+    rmt: Rmt<'static>,
+    mut power_pin: AnyPin<Output<PushPull>>,
+    data_pin: AnyPin<Output<PushPull>>,
+) {
+    unwrap!(power_pin.set_high());
+    let data_pin: Gpio18<Output<PushPull>> = data_pin.try_into().unwrap();
+
+    let mut led = <smartLedAdapter!(0, 1)>::new(rmt.channel0, data_pin);
+
+    let mut color_index = 0u8;
+    loop {
+        let color = rgb_color_wheel(color_index);
+        defmt::debug!("{}: {}", color_index, Debug2Format(&color));
+        unwrap!(led.write(brightness(core::iter::once(color), 90)));
+
+        color_index = color_index.wrapping_add(1);
+        Timer::after(Duration::from_millis(15)).await;
+    }
+}
+
 #[main]
-async fn main(_spawner: Spawner) {
+async fn main(spawner: Spawner) {
     init_heap();
 
     esp_println::println!("Init!");
@@ -42,27 +70,25 @@ async fn main(_spawner: Spawner) {
     defmt::warn!("This is warn");
     defmt::error!("This is error");
 
-    let p = Peripherals::take();
-    let system: SystemParts = p.SYSTEM.split();
+    let peripherals = Peripherals::take();
+    let system: SystemParts = peripherals.SYSTEM.split();
     let clocks = ClockControl::boot_defaults(system.clock_control).freeze();
 
-    let io = IO::new(p.GPIO, p.IO_MUX);
-    let rmt = Rmt::new(p.RMT, 80u32.MHz(), &clocks).unwrap();
-    embassy::init(&clocks, esp32s3_hal::systimer::SystemTimer::new(p.SYSTIMER));
+    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
+    let rmt = Rmt::new(peripherals.RMT, 80u32.MHz(), &clocks).unwrap();
+    embassy::init(
+        &clocks,
+        esp32s3_hal::systimer::SystemTimer::new(peripherals.SYSTIMER),
+    );
 
-    let mut neopixel_power = io.pins.gpio17.into_push_pull_output();
-    unwrap!(neopixel_power.set_high());
-    let mut led = <smartLedAdapter!(0, 1)>::new(rmt.channel0, io.pins.gpio18);
+    let neopixel_power_pin = io.pins.gpio17.into_push_pull_output();
+    let neopixel_data_pin = io.pins.gpio18.into_push_pull_output();
 
-    let mut color_index = 0u8;
-    loop {
-        let color = rgb_color_wheel(color_index);
-        defmt::debug!("{}: {}", color_index, Debug2Format(&color));
-        unwrap!(led.write(brightness(core::iter::once(color), 160)));
-
-        color_index = color_index.wrapping_add(1);
-        Timer::after(Duration::from_millis(15)).await;
-    }
+    unwrap!(spawner.spawn(run_color_wheel(
+        rmt,
+        neopixel_power_pin.degrade(),
+        neopixel_data_pin.degrade(),
+    )));
 }
 
 fn rgb_color_wheel(mut i: u8) -> RGB8 {
