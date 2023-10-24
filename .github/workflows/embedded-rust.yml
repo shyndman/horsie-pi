@@ -38,4 +38,4 @@ jobs:
           ldproxy: false
       - name: Run command
         run: cargo ${{ matrix.action.command }} ${{ matrix.action.args }}
-        working-directory: ./horsie-peripheral-controller
+        working-directory: ./peripheral-controller

@@ -1,12 +1,12 @@
 cargo-features = ["per-package-target"]
 
 [package]
+name = "peripheral-controller"
+version = "0.1.0"
 authors = ["Scott Hyndman <scotty.hyndman@gmail.com>"]
+license = "MIT OR Apache-2.0"
 edition = "2021"
 forced-target = "xtensa-esp32s3-none-elf"
-license = "MIT OR Apache-2.0"
-name = "scratch"
-version = "0.1.0"
 
 [dependencies]
 critical-section = "1.1.2"

@@ -845,6 +845,42 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
 
 [[package]]
+name = "peripheral-controller"
+version = "0.1.0"
+dependencies = [
+ "critical-section",
+ "defmt",
+ "defmt-macros",
+ "embassy-embedded-hal",
+ "embassy-executor",
+ "embassy-sync",
+ "embassy-time",
+ "embedded-hal 0.2.7",
+ "embedded-hal 1.0.0-rc.1",
+ "embedded-io 0.5.0",
+ "embedded-io-async",
+ "embedded-svc",
+ "esp-alloc",
+ "esp-backtrace",
+ "esp-hal-procmacros",
+ "esp-hal-smartled",
+ "esp-println",
+ "esp32s3 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "esp32s3-hal",
+ "futures",
+ "heapless",
+ "hp-embedded-drivers",
+ "log",
+ "rgb",
+ "smart-leds",
+ "smart-leds-trait",
+ "smoltcp",
+ "static_cell",
+ "usb-device",
+ "usbd-serial",
+]
+
+[[package]]
 name = "pin-project-lite"
 version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -982,42 +1018,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "scratch"
-version = "0.1.0"
-dependencies = [
- "critical-section",
- "defmt",
- "defmt-macros",
- "embassy-embedded-hal",
- "embassy-executor",
- "embassy-sync",
- "embassy-time",
- "embedded-hal 0.2.7",
- "embedded-hal 1.0.0-rc.1",
- "embedded-io 0.5.0",
- "embedded-io-async",
- "embedded-svc",
- "esp-alloc",
- "esp-backtrace",
- "esp-hal-procmacros",
- "esp-hal-smartled",
- "esp-println",
- "esp32s3 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "esp32s3-hal",
- "futures",
- "heapless",
- "hp-embedded-drivers",
- "log",
- "rgb",
- "smart-leds",
- "smart-leds-trait",
- "smoltcp",
- "static_cell",
- "usb-device",
- "usbd-serial",
-]
 
 [[package]]
 name = "semver"

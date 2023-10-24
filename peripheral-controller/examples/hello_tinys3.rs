@@ -27,7 +27,7 @@ use esp_hal_procmacros::main;
 use esp_hal_smartled::{smartLedAdapter, SmartLedsAdapter};
 use esp_println::logger::init_logger_from_env;
 use hp_embedded_drivers::ina260_async::Ina260;
-use scratch as _;
+use peripheral_controller as _;
 use smart_leds::brightness;
 use smart_leds_trait::*;
 use static_cell::make_static;
