@@ -36,7 +36,7 @@ use esp_println::logger::init_logger_from_env;
 use hp_embedded_drivers::{husb238_async::Husb238, ina260_async::Ina260};
 use peripheral_controller::{
     init_heap,
-    ui::rgb_button::RgbButton,
+    ui::{color::rgb_color_wheel, rgb_button::RgbButton},
 };
 use smart_leds::{brightness, colors};
 use smart_leds_trait::*;
@@ -51,22 +51,6 @@ async fn run_color_wheel(
     data_pin: AnyPin<Output<PushPull>>,
     mut power_button: RgbButton<'static>,
 ) {
-    fn rgb_color_wheel(i: u8) -> RGB8 {
-        match i % 255 {
-            i @ 0..85 => RGB8::new(255 - i * 3, 0, i * 3),
-            mut i @ 85..170 => {
-                i -= 85;
-                RGB8::new(0, i * 3, 255 - i * 3)
-            }
-            mut i @ _ => {
-                i -= 170;
-                RGB8::new(i * 3, 255 - i * 3, 0)
-            }
-        }
-    }
-
-    // let mut power_pin = power_pin.into() as Output<Unknown>;
-
     unwrap!(power_pin.set_high());
     let data_pin: Gpio18<Output<PushPull>> = data_pin.try_into().unwrap();
 
@@ -75,10 +59,11 @@ async fn run_color_wheel(
     let mut color_index = 0u8;
     loop {
         let color = rgb_color_wheel(color_index);
+        color_index = color_index.wrapping_add(1);
+
         led.write(brightness(core::iter::once(color), 60)).unwrap();
         power_button.set_color(color);
 
-        color_index = color_index.wrapping_add(1);
         Timer::after(Duration::from_millis(15)).await;
     }
 }
