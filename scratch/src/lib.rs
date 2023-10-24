@@ -4,7 +4,8 @@
     asm_experimental_arch,
     const_mut_refs,
     custom_test_frameworks,
-    type_alias_impl_trait
+    type_alias_impl_trait,
+    impl_trait_projections
 )]
 #![test_runner(run_tests)]
 

@@ -5,15 +5,20 @@
 extern crate alloc;
 use core::mem::MaybeUninit;
 
+use defmt::Debug2Format;
 use defmt_macros::unwrap;
+use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Instant, Timer};
 use esp32s3_hal::{
     self,
     clock::ClockControl,
     embassy, entry,
     gpio::{AnyPin, Gpio18, Output, PushPull},
-    peripherals::Peripherals,
+    i2c::I2C,
+    interrupt,
+    peripherals::{Interrupt, Peripherals},
     prelude::*,
     system::SystemParts,
     uart, Rmt, Uart, IO,
@@ -21,9 +26,11 @@ use esp32s3_hal::{
 use esp_hal_procmacros::main;
 use esp_hal_smartled::{smartLedAdapter, SmartLedsAdapter};
 use esp_println::logger::init_logger_from_env;
+use hp_embedded_drivers::ina260_async::Ina260;
 use scratch as _;
 use smart_leds::brightness;
 use smart_leds_trait::*;
+use static_cell::make_static;
 
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
@@ -106,6 +113,15 @@ async fn main(spawner: Spawner) {
         Some(uart::TxRxPins::new_tx_rx(io.pins.gpio7, io.pins.gpio6)),
         &clocks,
     );
+    let i2c0 = I2C::new(
+        peripherals.I2C0,
+        io.pins.gpio43,
+        io.pins.gpio44,
+        100u32.kHz(),
+        &clocks,
+    );
+    interrupt::enable(Interrupt::I2C_EXT0, interrupt::Priority::Priority1).unwrap();
+
     embassy::init(
         &clocks,
         esp32s3_hal::systimer::SystemTimer::new(peripherals.SYSTIMER),
@@ -114,18 +130,54 @@ async fn main(spawner: Spawner) {
     let neopixel_power_pin = io.pins.gpio17.into_push_pull_output();
     let neopixel_data_pin = io.pins.gpio18.into_push_pull_output();
 
-    unwrap!(spawner.spawn(run_color_wheel(
-        rmt,
-        neopixel_power_pin.degrade(),
-        neopixel_data_pin.degrade(),
-    )));
+    spawner
+        .spawn(run_color_wheel(
+            rmt,
+            neopixel_power_pin.degrade(),
+            neopixel_data_pin.degrade(),
+        ))
+        .unwrap();
 
-    unwrap!(spawner.spawn(run_host_communication(uart1)));
+    spawner.spawn(run_host_communication(uart1)).unwrap();
+
+    spawner.spawn(read_power_metrics(i2c0)).unwrap();
 
     loop {
         let uptime_seconds = Instant::now().as_millis() as f32 / 1000.0;
 
         defmt::debug!("Up {} seconds", uptime_seconds);
         Timer::after(Duration::from_secs(10)).await;
+    }
+}
+
+#[embassy_executor::task]
+async fn read_power_metrics(i2c0: I2C<'static, esp32s3_hal::peripherals::I2C0>) {
+    Timer::after(Duration::from_secs(2)).await;
+    defmt::info!("Attempting to communicate with INA260");
+
+    let i2c0_bus: &'static mut Mutex<
+        CriticalSectionRawMutex,
+        I2C<'static, esp32s3_hal::peripherals::I2C0>,
+    > = make_static!({ Mutex::<CriticalSectionRawMutex, _>::new(i2c0) });
+
+    let mut ina260 = match Ina260::new(I2cDevice::new(i2c0_bus)).await {
+        Ok(device) => {
+            defmt::info!("Established contact");
+            device
+        }
+        Err(e) => {
+            defmt::error!("ERROR, {}", Debug2Format(&e));
+            return;
+        }
+    };
+
+    loop {
+        let m_volts = ina260.read_bus_voltage().await.unwrap();
+        let m_amps = ina260.read_current().await.unwrap();
+        let m_watts = ina260.read_power().await.unwrap();
+
+        defmt::info!("{}mV {}mA {}mW", m_volts, m_amps, m_watts);
+
+        Timer::after(Duration::from_secs(4)).await;
     }
 }

@@ -12,6 +12,10 @@ version = "0.1.0"
 critical-section = "1.1.2"
 defmt = {version = "0.3.5"}
 defmt-macros = {version = "0.3.5"}
+embassy-embedded-hal = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-embedded-hal", rev = "1a51a843130fbc325dafbbba5004847462089ff3", features = [
+  "nightly",
+  "time",
+]}
 embassy-executor = {version = "0.3.0", features = ["nightly"]}
 embassy-sync = "0.3.0"
 embassy-time = "0.1.5"
@@ -68,5 +72,18 @@ smoltcp = {version = "0.10.0", default-features = false, features = [
   "socket-tcp",
   "socket-udp",
 ]}
+static_cell = {version = "1.2.0", features = ["nightly"]}
 usb-device = {version = "0.2.9", features = ["defmt"]}
 usbd-serial = "0.1.1"
+
+
+hp-embedded-drivers = {path = "../embedded-drivers"}
+
+[patch.crates-io]
+embassy-sync = {version = "0.3.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-sync", rev = "1a51a843130fbc325dafbbba5004847462089ff3"}
+embassy-time = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-time", rev = "1a51a843130fbc325dafbbba5004847462089ff3", features = [
+  "defmt",
+  "defmt-timestamp-uptime",
+  "nightly",
+  "unstable-traits",
+]}
