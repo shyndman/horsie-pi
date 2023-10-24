@@ -1,7 +1,7 @@
 {
   "evenBetterToml.formatter.columnWidth": 400,
   "evenBetterToml.formatter.compactInlineTables": true,
-  "evenBetterToml.formatter.reorderArrays": true,
+  "evenBetterToml.formatter.reorderArrays": false,
   "evenBetterToml.formatter.compactArrays": true,
   "evenBetterToml.formatter.arrayTrailingComma": false,
   "evenBetterToml.formatter.arrayAutoCollapse": true,
