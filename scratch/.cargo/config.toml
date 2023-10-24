@@ -6,8 +6,8 @@ rustflags = [
   "-C",
   "link-arg=-Wl,-Tlinkall.x",
   # Required for WiFi
-  "-C",
-  "link-arg=-Trom_functions.x",
+  # "-C",
+  # "link-arg=-Trom_functions.x",
   "-C",
   "link-arg=-nostartfiles",
   "-C",
