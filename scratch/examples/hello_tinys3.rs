@@ -59,16 +59,24 @@ async fn run_color_wheel(
     }
 }
 
+fn rgb_color_wheel(mut i: u8) -> RGB8 {
+    i %= 255;
+
+    if i < 85 {
+        RGB8::new(255 - i * 3, 0, i * 3)
+    } else if i < 170 {
+        i -= 85;
+        RGB8::new(0, i * 3, 255 - i * 3)
+    } else {
+        i -= 170;
+        RGB8::new(i * 3, 255 - i * 3, 0)
+    }
+}
+
 #[main]
 async fn main(spawner: Spawner) {
     init_heap();
-
-    esp_println::println!("Init!");
-    defmt::trace!("This is trace");
-    defmt::debug!("This is debug");
-    defmt::info!("This is info");
-    defmt::warn!("This is warn");
-    defmt::error!("This is error");
+    defmt::info!("Init!");
 
     let peripherals = Peripherals::take();
     let system: SystemParts = peripherals.SYSTEM.split();
@@ -89,18 +97,4 @@ async fn main(spawner: Spawner) {
         neopixel_power_pin.degrade(),
         neopixel_data_pin.degrade(),
     )));
-}
-
-fn rgb_color_wheel(mut i: u8) -> RGB8 {
-    i %= 255;
-
-    if i < 85 {
-        RGB8::new(255 - i * 3, 0, i * 3)
-    } else if i < 170 {
-        i -= 85;
-        RGB8::new(0, i * 3, 255 - i * 3)
-    } else {
-        i -= 170;
-        RGB8::new(i * 3, 255 - i * 3, 0)
-    }
 }
