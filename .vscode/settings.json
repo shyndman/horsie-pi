@@ -15,4 +15,5 @@
   "evenBetterToml.schema.enabled": false,
   "evenBetterToml.schema.links": true,
   "evenBetterToml.taplo.configFile.enabled": false,
+  "crates.listPreReleases": true
 }
