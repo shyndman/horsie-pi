@@ -174,7 +174,7 @@ async fn read_power_metrics(i2c0: I2C<'static, esp32s3_hal::peripherals::I2C0>) 
     };
 
     defmt::info!("Attempting to communicate with HUSB238");
-    let husb238 = match Husb238::new(I2cDevice::new(i2c0_bus)).await {
+    let mut husb238 = match Husb238::new(I2cDevice::new(i2c0_bus)).await {
         Ok(device) => {
             defmt::info!("Established contact");
             device
@@ -189,8 +189,10 @@ async fn read_power_metrics(i2c0: I2C<'static, esp32s3_hal::peripherals::I2C0>) 
         let m_volts = ina260.read_bus_voltage().await.unwrap();
         let m_amps = ina260.read_current().await.unwrap();
         let m_watts = ina260.read_power().await.unwrap();
+        let (source_voltage, source_current) = husb238.active_power_settings().await.unwrap();
 
         defmt::info!("{}mV {}mA {}mW", m_volts, m_amps, m_watts);
+        defmt::info!("power source: {}A@{}V", source_voltage, source_current);
 
         Timer::after(Duration::from_secs(4)).await;
     }

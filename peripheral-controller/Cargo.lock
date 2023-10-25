@@ -734,6 +734,7 @@ name = "hp-embedded-drivers"
 version = "0.1.0"
 dependencies = [
  "bondrewd",
+ "defmt",
  "embassy-time",
  "embedded-hal 1.0.0-rc.1",
  "embedded-hal-async",

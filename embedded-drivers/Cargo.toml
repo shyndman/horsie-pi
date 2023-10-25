@@ -8,8 +8,13 @@ version      = "0.1.0"
 
 [dependencies]
 bondrewd           = {version = "0.1.14", default-features = false, features = ["derive", "hex_fns", "slice_fns"]}
+defmt              = {version = "0.3.5", optional = true}
 embassy-time       = {version = "0.1.5", features = ["embedded-hal-1", "nightly"]}
 embedded-hal       = "1.0.0-rc.1"
 embedded-hal-async = "1.0.0-rc.1"
 futures-util       = {version = "0.3.28", default-features = false}
 paste              = "1.0"
+
+[features]
+default = ["defmt"]
+defmt   = ["dep:defmt"]

@@ -5,6 +5,7 @@ pub enum Error<E>
 where
     E: Debug,
 {
+    InvalidPowerData,
     BusError(E),
 }
 

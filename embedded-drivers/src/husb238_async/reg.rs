@@ -136,7 +136,7 @@ pub struct GoCommandRegister {
     #[bondrewd(bit_length = 3, reserve)]
     reserved: u8,
     #[bondrewd(enum_primitive = "u8", bit_length = 5)]
-    command_function: CommandFunction,
+    pub command_function: CommandFunction,
 }
 impl Register for GoCommandRegister {
     fn address() -> RegisterAddress {
