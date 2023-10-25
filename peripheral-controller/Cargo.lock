@@ -69,6 +69,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bh1750-ehal"
+version = "0.0.2"
+source = "git+https://github.com/shyndman/bh1750?branch=main#97c113f8cb63eeff3b279a6ac9d1dd7b5b663514"
+dependencies = [
+ "embedded-hal-async",
+]
+
+[[package]]
 name = "bitfield"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -217,6 +225,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "269924c02afd7f94bc4cecbfa5c379f6ffcf9766b3408fe63d22c728654eccd0"
 dependencies = [
  "thiserror",
+]
+
+[[package]]
+name = "drv2605l"
+version = "0.1.0"
+source = "git+https://github.com/shyndman/drv2605l-rs?branch=main#7b4249751afe230c5a80219ca805fbf8d7bf11f6"
+dependencies = [
+ "bitfield",
+ "embedded-hal 1.0.0-rc.1",
+ "embedded-hal-async",
 ]
 
 [[package]]
@@ -516,7 +534,7 @@ dependencies = [
  "darling",
  "litrs",
  "object",
- "proc-macro-crate",
+ "proc-macro-crate 2.0.0",
  "proc-macro-error",
  "proc-macro2",
  "quote",
@@ -740,6 +758,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "int-enum"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cff87d3cc4b79b4559e3c75068d64247284aceb6a038bd4bb38387f3f164476d"
+dependencies = [
+ "int-enum-impl",
+]
+
+[[package]]
+name = "int-enum-impl"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df1f2f068675add1a3fc77f5f5ab2e29290c841ee34d151abc007bce902e5d34"
+dependencies = [
+ "proc-macro-crate 1.3.1",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "linked_list_allocator"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -839,6 +878,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "once_cell"
+version = "1.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
+
+[[package]]
 name = "paste"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -848,9 +893,11 @@ checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
 name = "peripheral-controller"
 version = "0.1.0"
 dependencies = [
+ "bh1750-ehal",
  "critical-section",
  "defmt",
  "defmt-macros",
+ "drv2605l",
  "embassy-embedded-hal",
  "embassy-executor",
  "embassy-sync",
@@ -878,6 +925,7 @@ dependencies = [
  "static_cell",
  "usb-device",
  "usbd-serial",
+ "vl6180x",
 ]
 
 [[package]]
@@ -894,11 +942,21 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "proc-macro-crate"
+version = "1.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f4c021e1093a56626774e81216a4ce732a735e5bad4868a03f3ed65ca0c3919"
+dependencies = [
+ "once_cell",
+ "toml_edit 0.19.15",
+]
+
+[[package]]
+name = "proc-macro-crate"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e8366a6159044a37876a2b9817124296703c586a5c92e2c53751fa06d8d43e8"
 dependencies = [
- "toml_edit",
+ "toml_edit 0.20.2",
 ]
 
 [[package]]
@@ -1223,6 +1281,17 @@ checksum = "7cda73e2f1397b1262d6dfdcef8aafae14d1de7748d66822d3bfeeb6d03e5e4b"
 
 [[package]]
 name = "toml_edit"
+version = "0.19.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b5bb770da30e5cbfde35a2d7b9b8a2c4b8ef89548a7a6aeab5c9a576e3e7421"
+dependencies = [
+ "indexmap",
+ "toml_datetime",
+ "winnow",
+]
+
+[[package]]
+name = "toml_edit"
 version = "0.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "396e4d48bbb2b7554c944bde63101b5ae446cff6ec4a24227428f15eb72ef338"
@@ -1279,6 +1348,16 @@ name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
+
+[[package]]
+name = "vl6180x"
+version = "0.2.0"
+source = "git+https://github.com/shyndman/vl6180x?branch=main#c3d6dcc8b2bcfe4c641e6a129755f0d6e233cc0c"
+dependencies = [
+ "embedded-hal 1.0.0-rc.1",
+ "embedded-hal-async",
+ "int-enum",
+]
 
 [[package]]
 name = "void"
