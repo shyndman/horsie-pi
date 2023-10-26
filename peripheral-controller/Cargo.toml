@@ -1,52 +1,108 @@
 cargo-features = ["per-package-target"]
 
 [package]
-authors       = ["Scott Hyndman <scotty.hyndman@gmail.com>"]
-edition       = "2021"
+name = "peripheral-controller"
+authors = ["Scott Hyndman <scotty.hyndman@gmail.com>"]
+version = "0.1.0"
+license = "MIT OR Apache-2.0"
+edition = "2021"
 forced-target = "xtensa-esp32s3-none-elf"
-license       = "MIT OR Apache-2.0"
-name          = "peripheral-controller"
-version       = "0.1.0"
 
 [dependencies]
-critical-section     = "1.1.2"
-defmt                = {version = "0.3.5"}
-defmt-macros         = {version = "0.3.5"}
-embassy-embedded-hal = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-embedded-hal", rev = "1a51a843130fbc325dafbbba5004847462089ff3", features = ["nightly", "time"]}
-embassy-executor     = {version = "0.3.0", features = ["nightly"]}
-embassy-sync         = "0.3.0"
-embassy-time         = "0.1.5"
-embedded-hal         = {package = "embedded-hal", version = "0.2.7"}
-embedded-hal_1       = {package = "embedded-hal", version = "1.0.0-rc.1"}
-embedded-io          = "0.5.0"
-embedded-io-async    = "0.5.0"
-embedded-svc         = {version = "0.26.1", default-features = false, features = []}
-esp-alloc            = {version = "0.3.0"}
-esp-backtrace        = {version = "0.8.0", features = ["esp32s3", "exception-handler", "panic-handler", "print-jtag-serial"]}
-esp-hal-procmacros   = {git = "https://github.com/esp-rs/esp-hal", rev = "29f3518c047fa31ad29a70f0ee73e3484af6c8d8", package = "esp-hal-procmacros", features = ["embassy", "esp32s3"]}
-esp-hal-smartled     = {git = "https://github.com/esp-rs/esp-hal", rev = "29f3518c047fa31ad29a70f0ee73e3484af6c8d8", package = "esp-hal-smartled", features = ["esp32s3", "defmt"]}
-esp-println          = {version = "0.6.0", default-features = false, features = ["defmt", "esp32s3", "jtag_serial", "log"]}
-esp32s3              = {version = "0.21.0", features = ["impl-register-debug", "rt"]}
-esp32s3-hal          = {git = "https://github.com/esp-rs/esp-hal", rev = "29f3518c047fa31ad29a70f0ee73e3484af6c8d8", package = "esp32s3-hal", features = ["async", "defmt", "eh1", "embassy", "embassy-executor-thread", "embassy-time-systick", "rt"]}
-futures              = {version = "0.3.28", default-features = false}
-heapless             = {version = "0.7.14", default-features = false}
-log                  = {version = "0.4.18"}
-rgb                  = {version = "0.8.36"}
-smart-leds           = {version = "0.3.0"}
-smart-leds-trait     = "0.2.1"
-smoltcp              = {version = "0.10.0", default-features = false, features = ["medium-ethernet", "proto-dhcpv4", "proto-igmp", "proto-ipv4", "socket-dhcpv4", "socket-icmp", "socket-raw", "socket-tcp", "socket-udp"]}
-static_cell          = {version = "1.2.0", features = ["nightly"]}
-usb-device           = {version = "0.2.9", features = ["defmt"]}
-usbd-serial          = "0.1.1"
+critical-section = "1.1.2"
+defmt = {version = "0.3.5"}
+defmt-macros = {version = "0.3.5"}
+embassy-embedded-hal = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-embedded-hal", rev = "b6fc682117a41e8e63a9632e06da5a17f46d9ab0", default-features = false, features = [
+  "defmt",
+  "nightly",
+  "time",
+]}
+embassy-executor = {version = "0.3.0", features = ["nightly"]}
+embassy-sync = "0.3.0"
+embassy-time = {version = "0.1.5", features = ["unstable-traits"]}
+embedded-hal = {package = "embedded-hal", version = "0.2.7"}
+embedded-hal_1 = {package = "embedded-hal", version = "1.0.0-rc.1"}
+embedded-hal-async = "1.0.0-rc.1"
+embedded-io = "0.5.0"
+embedded-io-async = "0.5.0"
+embedded-svc = {version = "0.26.1", default-features = false, features = []}
+esp-alloc = {version = "0.3.0"}
+esp-backtrace = {version = "0.8.0", features = [
+  "esp32s3",
+  "exception-handler",
+  "panic-handler",
+  "print-jtag-serial",
+]}
+esp-hal-procmacros = {git = "https://github.com/esp-rs/esp-hal", rev = "29f3518c047fa31ad29a70f0ee73e3484af6c8d8", package = "esp-hal-procmacros", features = [
+  "embassy",
+  "esp32s3",
+]}
+esp-hal-smartled = {git = "https://github.com/esp-rs/esp-hal", rev = "29f3518c047fa31ad29a70f0ee73e3484af6c8d8", package = "esp-hal-smartled", features = [
+  "esp32s3",
+  "defmt",
+]}
+esp-println = {version = "0.6.0", default-features = false, features = [
+  "defmt",
+  "esp32s3",
+  "jtag_serial",
+  "log",
+]}
+esp32s3 = {version = "0.21.0", features = ["impl-register-debug", "rt"]}
+esp32s3-hal = {git = "https://github.com/esp-rs/esp-hal", rev = "29f3518c047fa31ad29a70f0ee73e3484af6c8d8", package = "esp32s3-hal", features = [
+  "async",
+  "defmt",
+  "eh1",
+  "embassy",
+  "embassy-executor-thread",
+  "embassy-time-systick",
+  "rt",
+]}
+futures = {version = "0.3.28", default-features = false}
+heapless = {version = "0.7.14", default-features = false}
+log = {version = "0.4.18"}
+rgb = {version = "0.8.36"}
+smart-leds = {version = "0.3.0"}
+smart-leds-trait = "0.2.1"
+smoltcp = {version = "0.10.0", default-features = false, features = [
+  "medium-ethernet",
+  "proto-dhcpv4",
+  "proto-igmp",
+  "proto-ipv4",
+  "socket-dhcpv4",
+  "socket-icmp",
+  "socket-raw",
+  "socket-tcp",
+  "socket-udp",
+]}
+static_cell = {version = "1.2.0", features = ["nightly"]}
+usb-device = {version = "0.2.9", features = ["defmt"]}
+usbd-serial = "0.1.1"
 
 # Forked drivers
-bh1750_async        = {git = "https://github.com/shyndman/bh1750", branch = "main", package = "bh1750-ehal"}
-vl6180x_async        = {git = "https://github.com/shyndman/vl6180x", branch = "main", package = "vl6180x"}
-drv2605l_async        = {git = "https://github.com/shyndman/drv2605l-rs", branch = "main", package = "drv2605l"}
+bh1750_async = {git = "https://github.com/shyndman/bh1750", rev = "743bfbee36582494ba028960b3600491a6bdc4f7", package = "bh1750-ehal"}
+vl6180x_async = {git = "https://github.com/shyndman/vl6180x", rev = "b44d0024e25b70de931e6a2bcf6acd515585c323", package = "vl6180x", features = [
+  "defmt",
+]}
+drv2605l_async = {git = "https://github.com/shyndman/drv2605l-rs", rev = "59b844612889a49f552c63855000e0487e29cb80", package = "drv2605l", features = [
+  "defmt",
+]}
 
 # Project crates
 hp-embedded-drivers = {path = "../embedded-drivers"}
 
 [patch.crates-io]
-embassy-sync = {version = "0.3.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-sync", rev = "1a51a843130fbc325dafbbba5004847462089ff3"}
-embassy-time = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-time", rev = "1a51a843130fbc325dafbbba5004847462089ff3", features = ["defmt", "defmt-timestamp-uptime", "nightly", "unstable-traits"]}
+embassy-sync = {version = "0.3.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-sync", rev = "b6fc682117a41e8e63a9632e06da5a17f46d9ab0"}
+embassy-time = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-time", rev = "b6fc682117a41e8e63a9632e06da5a17f46d9ab0", features = [
+  "defmt",
+  "defmt-timestamp-uptime",
+  "nightly",
+  "unstable-traits",
+]}
+embassy-futures = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-futures", rev = "b6fc682117a41e8e63a9632e06da5a17f46d9ab0", features = [
+  "features",
+]}
+
+# [patch."https://github.com/esp-rs/esp-hal"]
+# esp32s3-hal = {path = "/home/shyndman/dev/rust-embedded-drivers/esp-hal/esp32s3-hal"}
+# esp-hal-procmacros = {path = "/home/shyndman/dev/rust-embedded-drivers/esp-hal/esp-hal-procmacros"}
+# esp-hal-smartled = {path = "/home/shyndman/dev/rust-embedded-drivers/esp-hal/esp-hal-smartled"}

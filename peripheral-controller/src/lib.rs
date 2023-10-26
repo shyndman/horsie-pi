@@ -2,11 +2,13 @@
 #![no_main]
 #![feature(
     asm_experimental_arch,
+    async_fn_in_trait,
     const_mut_refs,
     custom_test_frameworks,
-    type_alias_impl_trait,
+    exclusive_range_pattern,
     impl_trait_projections,
-    exclusive_range_pattern
+    return_position_impl_trait_in_trait,
+    type_alias_impl_trait,
 )]
 #![test_runner(run_tests)]
 

@@ -61,9 +61,9 @@ checksum = "f8fe8f5a8a398345e52358e18ff07cc17a568fbca5c6f73873d3a62056309603"
 
 [[package]]
 name = "basic-toml"
-version = "0.1.4"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7bfc506e7a2370ec239e1d072507b2a80c833083699d3c6fa176fbb4de8448c6"
+checksum = "24c12265665aebaa236af9bbe266681bcc9c5666192119e3d8335cf083aca26f"
 dependencies = [
  "serde",
 ]
@@ -71,7 +71,7 @@ dependencies = [
 [[package]]
 name = "bh1750-ehal"
 version = "0.0.2"
-source = "git+https://github.com/shyndman/bh1750?branch=main#97c113f8cb63eeff3b279a6ac9d1dd7b5b663514"
+source = "git+https://github.com/shyndman/bh1750?rev=743bfbee36582494ba028960b3600491a6bdc4f7#743bfbee36582494ba028960b3600491a6bdc4f7"
 dependencies = [
  "embedded-hal-async",
 ]
@@ -230,9 +230,10 @@ dependencies = [
 [[package]]
 name = "drv2605l"
 version = "0.1.0"
-source = "git+https://github.com/shyndman/drv2605l-rs?branch=main#7b4249751afe230c5a80219ca805fbf8d7bf11f6"
+source = "git+https://github.com/shyndman/drv2605l-rs?rev=59b844612889a49f552c63855000e0487e29cb80#59b844612889a49f552c63855000e0487e29cb80"
 dependencies = [
  "bitfield",
+ "defmt",
  "embedded-hal 1.0.0-rc.1",
  "embedded-hal-async",
 ]
@@ -240,9 +241,10 @@ dependencies = [
 [[package]]
 name = "embassy-embedded-hal"
 version = "0.1.0"
-source = "git+https://github.com/embassy-rs/embassy?rev=1a51a843130fbc325dafbbba5004847462089ff3#1a51a843130fbc325dafbbba5004847462089ff3"
+source = "git+https://github.com/embassy-rs/embassy?rev=b6fc682117a41e8e63a9632e06da5a17f46d9ab0#b6fc682117a41e8e63a9632e06da5a17f46d9ab0"
 dependencies = [
- "embassy-futures 0.1.0 (git+https://github.com/embassy-rs/embassy?rev=1a51a843130fbc325dafbbba5004847462089ff3)",
+ "defmt",
+ "embassy-futures",
  "embassy-sync",
  "embassy-time",
  "embedded-hal 0.2.7",
@@ -271,16 +273,10 @@ dependencies = [
 [[package]]
 name = "embassy-futures"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47e5367165d347c039360f784812f493b001583ab6a3dd8622f4ce9c30374ec3"
+source = "git+https://github.com/embassy-rs/embassy?rev=b6fc682117a41e8e63a9632e06da5a17f46d9ab0#b6fc682117a41e8e63a9632e06da5a17f46d9ab0"
 dependencies = [
  "defmt",
 ]
-
-[[package]]
-name = "embassy-futures"
-version = "0.1.0"
-source = "git+https://github.com/embassy-rs/embassy?rev=1a51a843130fbc325dafbbba5004847462089ff3#1a51a843130fbc325dafbbba5004847462089ff3"
 
 [[package]]
 name = "embassy-macros"
@@ -297,7 +293,7 @@ dependencies = [
 [[package]]
 name = "embassy-sync"
 version = "0.3.0"
-source = "git+https://github.com/embassy-rs/embassy?rev=1a51a843130fbc325dafbbba5004847462089ff3#1a51a843130fbc325dafbbba5004847462089ff3"
+source = "git+https://github.com/embassy-rs/embassy?rev=b6fc682117a41e8e63a9632e06da5a17f46d9ab0#b6fc682117a41e8e63a9632e06da5a17f46d9ab0"
 dependencies = [
  "cfg-if",
  "critical-section",
@@ -309,7 +305,7 @@ dependencies = [
 [[package]]
 name = "embassy-time"
 version = "0.1.5"
-source = "git+https://github.com/embassy-rs/embassy?rev=1a51a843130fbc325dafbbba5004847462089ff3#1a51a843130fbc325dafbbba5004847462089ff3"
+source = "git+https://github.com/embassy-rs/embassy?rev=b6fc682117a41e8e63a9632e06da5a17f46d9ab0#b6fc682117a41e8e63a9632e06da5a17f46d9ab0"
 dependencies = [
  "cfg-if",
  "critical-section",
@@ -501,7 +497,7 @@ dependencies = [
  "critical-section",
  "defmt",
  "embassy-executor",
- "embassy-futures 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "embassy-futures",
  "embassy-sync",
  "embassy-time",
  "embedded-can",
@@ -905,6 +901,7 @@ dependencies = [
  "embassy-time",
  "embedded-hal 0.2.7",
  "embedded-hal 1.0.0-rc.1",
+ "embedded-hal-async",
  "embedded-io 0.5.0",
  "embedded-io-async",
  "embedded-svc",
@@ -957,7 +954,7 @@ version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e8366a6159044a37876a2b9817124296703c586a5c92e2c53751fa06d8d43e8"
 dependencies = [
- "toml_edit 0.20.2",
+ "toml_edit 0.20.4",
 ]
 
 [[package]]
@@ -1086,18 +1083,18 @@ checksum = "836fa6a3e1e547f9a2c4040802ec865b5d85f4014efe00555d7090a3dcaa1090"
 
 [[package]]
 name = "serde"
-version = "1.0.189"
+version = "1.0.190"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e422a44e74ad4001bdc8eede9a4570ab52f71190e9c076d14369f38b9200537"
+checksum = "91d3c334ca1ee894a2c6f6ad698fe8c435b76d504b13d436f0685d648d6d96f7"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.189"
+version = "1.0.190"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e48d1f918009ce3145511378cf68d613e3b3d9137d67272562080d68a2b32d5"
+checksum = "67c5609f394e5c2bd7fc51efda478004ea80ef42fee983d5c67a65e34f32c0e3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1276,9 +1273,9 @@ dependencies = [
 
 [[package]]
 name = "toml_datetime"
-version = "0.6.3"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cda73e2f1397b1262d6dfdcef8aafae14d1de7748d66822d3bfeeb6d03e5e4b"
+checksum = "3550f4e9685620ac18a50ed434eb3aec30db8ba93b0287467bca5826ea25baf1"
 
 [[package]]
 name = "toml_edit"
@@ -1293,9 +1290,9 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.20.2"
+version = "0.20.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "396e4d48bbb2b7554c944bde63101b5ae446cff6ec4a24227428f15eb72ef338"
+checksum = "380f9e8120405471f7c9ad1860a713ef5ece6a670c7eae39225e477340f32fc4"
 dependencies = [
  "indexmap",
  "toml_datetime",
@@ -1353,8 +1350,9 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 [[package]]
 name = "vl6180x"
 version = "0.2.0"
-source = "git+https://github.com/shyndman/vl6180x?branch=main#c3d6dcc8b2bcfe4c641e6a129755f0d6e233cc0c"
+source = "git+https://github.com/shyndman/vl6180x?rev=b44d0024e25b70de931e6a2bcf6acd515585c323#b44d0024e25b70de931e6a2bcf6acd515585c323"
 dependencies = [
+ "defmt",
  "embedded-hal 1.0.0-rc.1",
  "embedded-hal-async",
  "int-enum",
