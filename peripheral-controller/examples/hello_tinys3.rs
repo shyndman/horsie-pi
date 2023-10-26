@@ -1,6 +1,15 @@
 #![no_std]
 #![no_main]
-#![feature(async_fn_in_trait, impl_trait_projections, type_alias_impl_trait)]
+#![feature(
+    asm_experimental_arch,
+    async_fn_in_trait,
+    const_mut_refs,
+    custom_test_frameworks,
+    exclusive_range_pattern,
+    impl_trait_projections,
+    return_position_impl_trait_in_trait,
+    type_alias_impl_trait,
+)]
 
 extern crate alloc;
 
@@ -153,7 +162,7 @@ async fn read_power_metrics(i2c0: I2C<'static, esp32s3_hal::peripherals::I2C0>) 
             device
         }
         Err(e) => {
-            defmt::error!("ERROR, {}", Debug2Format(&e));
+            defmt::error!("ERROR, {}", e);
             return;
         }
     };
