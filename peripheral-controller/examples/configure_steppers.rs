@@ -16,6 +16,7 @@
 extern crate alloc;
 
 use embassy_executor::Spawner;
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Timer};
 use esp32s3_hal::{
     self,
@@ -36,10 +37,12 @@ use peripheral_controller::{
         tune::tune_driver,
         uart::{Tmc2209UartConnection, UART_BAUD_RATE},
     },
+    uart::bus::UartDevice,
 };
 use rgb::RGB8;
 use smart_leds::brightness;
 use smart_leds_trait::SmartLedsWrite;
+use static_cell::make_static;
 use tmc2209::reg::VACTUAL;
 
 #[main]
@@ -112,24 +115,30 @@ async fn main(spawner: Spawner) {
 }
 
 #[embassy_executor::task]
-async fn configure_stepper_drivers(mut uart: Uart<'static, esp32s3_hal::peripherals::UART2>) {
+async fn configure_stepper_drivers(uart2: Uart<'static, esp32s3_hal::peripherals::UART2>) {
     defmt::info!("Configuring stepper driver");
     Timer::after(Duration::from_secs(1)).await;
 
-    let mut pan_driver = Tmc2209UartConnection::connect(&mut uart, 0x00).await;
+    let uart2_bus: &'static mut Mutex<
+        CriticalSectionRawMutex,
+        Uart<'static, esp32s3_hal::peripherals::UART2>,
+    > = make_static!({ Mutex::<CriticalSectionRawMutex, _>::new(uart2) });
+
+    let mut pan_driver =
+        Tmc2209UartConnection::connect(UartDevice::new(uart2_bus), 0x00).await;
     defmt::info!("Connected to pan driver");
 
     defmt::info!("Tuning pan driver");
-    tune_driver(&mut pan_driver, NEMA8_S20STH30_0604A_CONSTANTS, &mut uart).await;
+    tune_driver(&mut pan_driver, NEMA8_S20STH30_0604A_CONSTANTS).await;
     defmt::info!("Tuned!");
 
     let tstep = pan_driver
-        .read_register::<tmc2209::reg::TSTEP, esp32s3_hal::peripherals::UART2>(&mut uart)
+        .read_register::<tmc2209::reg::TSTEP>()
         .await
         .unwrap();
     defmt::info!("TSTEP is {}", tstep.0);
 
     let mut vactual = VACTUAL::default();
     vactual.0 = 4000;
-    pan_driver.write_register(&mut uart, vactual).await.unwrap();
+    pan_driver.write_register(vactual).await.unwrap();
 }

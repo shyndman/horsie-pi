@@ -51,6 +51,7 @@ use peripheral_controller::{
         motor_constants::NEMA11_11HS18_0674S_CONSTANTS, tune::tune_driver,
         uart::Tmc2209UartConnection,
     },
+    uart::bus::UartDevice,
     ui::{color::rgb_color_wheel, rgb_button::RgbButton},
 };
 use smart_leds::brightness;
@@ -238,19 +239,22 @@ async fn run_host_communication(mut uart1: Uart<'static, esp32s3_hal::peripheral
 }
 
 #[embassy_executor::task]
-async fn configure_stepper_drivers(
-    mut uart2: Uart<'static, esp32s3_hal::peripherals::UART2>,
-) {
+async fn configure_stepper_drivers(uart2: Uart<'static, esp32s3_hal::peripherals::UART2>) {
     defmt::info!("Configuring stepper drivers");
     Timer::after(Duration::from_secs(1)).await;
 
-    let mut pan_driver = Tmc2209UartConnection::connect(&mut uart2, 0x00).await;
+    let uart2_bus: &'static mut Mutex<
+        CriticalSectionRawMutex,
+        Uart<'static, esp32s3_hal::peripherals::UART2>,
+    > = make_static!({ Mutex::<CriticalSectionRawMutex, _>::new(uart2) });
+    let mut pan_driver =
+        Tmc2209UartConnection::connect(UartDevice::new(uart2_bus), 0x00).await;
     defmt::info!("Connected to pan driver");
 
     // let mut tilt_driver = Tmc2209UartConnection::connect(&mut uart2, 0x01).await;
 
     defmt::info!("Tuning pan driver");
-    tune_driver(&mut pan_driver, NEMA11_11HS18_0674S_CONSTANTS, &mut uart2).await;
+    tune_driver(&mut pan_driver, NEMA11_11HS18_0674S_CONSTANTS).await;
     defmt::info!("Tuned!");
 
     // tune_driver(&mut tilt_driver, NEMA8_S20STH30_0604A_CONSTANTS, &mut uart2).await;

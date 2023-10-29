@@ -14,6 +14,7 @@
 
 pub mod panic;
 pub mod stepper;
+pub mod uart;
 pub mod ui;
 
 use core::mem::MaybeUninit;

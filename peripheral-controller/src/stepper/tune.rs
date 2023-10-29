@@ -1,20 +1,19 @@
 use defmt::unwrap;
-use esp32s3_hal::{uart, Uart};
+use embassy_sync::blocking_mutex::raw::RawMutex;
 
 use super::{
     motor_constants::{MotorConstants, TMC2209_VSENSE_OHMS},
     uart::Tmc2209UartConnection,
 };
 
-pub async fn tune_driver<'d, P: uart::Instance>(
-    driver: &mut Tmc2209UartConnection,
+pub async fn tune_driver<M: RawMutex, P: esp_hal_common::uart::Instance>(
+    driver: &mut Tmc2209UartConnection<M, P>,
     motor_constants: MotorConstants,
-    uart: &mut Uart<'static, P>,
 ) {
     // Disable automatic power down, because its pin is shared
     let mut gconf = tmc2209::reg::GCONF::default();
     gconf.set_pdn_disable(true);
-    unwrap!(driver.write_register(uart, gconf).await);
+    unwrap!(driver.write_register(gconf).await);
 
     let mut ihold_irun = tmc2209::reg::IHOLD_IRUN::default();
     let (vsense, irun) = tmc2209::rms_current_to_vsense_cs(
@@ -23,16 +22,16 @@ pub async fn tune_driver<'d, P: uart::Instance>(
     );
     ihold_irun.set_irun(irun);
     ihold_irun.set_ihold((irun - 8).max(0));
-    unwrap!(driver.write_register(uart, ihold_irun).await);
+    unwrap!(driver.write_register(ihold_irun).await);
 
     let mut chopconf = tmc2209::reg::CHOPCONF::default();
     let (hstrt, hend) = motor_constants.hysteresis(None, Some(12.0), None, None);
     chopconf.set_hstrt(hstrt);
     chopconf.set_hstrt(hend);
-    chopconf.set_mres(0b01); // 128 steps
+    chopconf.set_mres(0b00); // 256 steps
     chopconf.set_intpol(true); // Interpolation of microsteps to 256
     chopconf.set_vsense(vsense);
-    unwrap!(driver.write_register(uart, chopconf).await);
+    unwrap!(driver.write_register(chopconf).await);
 
     // StealthChop configuration
     let mut pwmconf = tmc2209::reg::PWMCONF::default();
@@ -42,24 +41,24 @@ pub async fn tune_driver<'d, P: uart::Instance>(
     pwmconf.set_pwm_ofs(motor_constants.pwm_output_frequency(None) as u8);
     pwmconf.set_pwm_reg(15);
     pwmconf.set_pwm_lim(4);
-    unwrap!(driver.write_register(uart, pwmconf).await);
+    unwrap!(driver.write_register(pwmconf).await);
 
     // Stallguard
     let mut tpwnthrs = tmc2209::reg::TPWMTHRS::default();
     tpwnthrs.set(0); // Disable switching between StealthChop and SpreadCycle
-    unwrap!(driver.write_register(uart, tpwnthrs).await);
+    unwrap!(driver.write_register(tpwnthrs).await);
 
     // Coolstep
     let mut tcoolthrs = tmc2209::reg::TCOOLTHRS::default();
     tcoolthrs.set(56);
-    unwrap!(driver.write_register(uart, tcoolthrs).await);
+    unwrap!(driver.write_register(tcoolthrs).await);
 
     let mut sgthrs = tmc2209::reg::SGTHRS::default();
     sgthrs.0 = 1;
-    unwrap!(driver.write_register(uart, sgthrs).await);
+    unwrap!(driver.write_register(sgthrs).await);
 
     gconf.set_en_spread_cycle(false); // StealthChop only
     gconf.set_mstep_reg_select(true); // Set microsteps via registers
     gconf.set_pdn_disable(false); // Re-enable PDN
-    unwrap!(driver.write_register(uart, gconf).await);
+    unwrap!(driver.write_register(gconf).await);
 }
