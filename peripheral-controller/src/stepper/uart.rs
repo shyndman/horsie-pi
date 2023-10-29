@@ -1,6 +1,6 @@
 use core::fmt::Debug;
 
-use defmt::{error, info, trace, unwrap, Debug2Format};
+use defmt::Debug2Format;
 use embassy_time::{Duration, Timer};
 use embedded_io_async::{Read, Write};
 use esp32s3_hal::{uart, Uart};
@@ -8,7 +8,7 @@ use tmc2209::reg;
 
 pub const UART_BAUD_RATE: u32 = 230400;
 
-const TIMEOUT: Duration = Duration::from_micros(120);
+const TIMEOUT: Duration = Duration::from_micros(240);
 
 /// Represents the connection to a TMC2209's UART interface
 pub struct Tmc2209UartConnection {
@@ -21,7 +21,7 @@ impl Tmc2209UartConnection {
         uart: &mut Uart<'static, P>,
         uart_address: u8,
     ) -> Tmc2209UartConnection {
-        info!("Connecting to TMC2209 @UART{}", uart_address);
+        defmt::info!("Connecting to TMC2209 @UART{}", uart_address);
 
         let change_count =
             read_register_internal(uart, uart_address, tmc2209::reg::Address::IFCNT)
@@ -69,24 +69,24 @@ impl Tmc2209UartConnection {
     where
         R: tmc2209::reg::WritableRegister + Debug,
     {
-        info!("Write register {:?}", defmt::Debug2Format(&register));
+        defmt::info!("Write register {:?}", defmt::Debug2Format(&register));
 
         let req = tmc2209::WriteRequest::new(self.uart_address, register);
-        trace!("write request: {}", req.bytes());
+        defmt::trace!("write request: {}", req.bytes());
         if let Err(e) = uart.write_all(req.bytes()).await {
-            error!("{:?}", e);
+            defmt::error!("{:?}", e);
             return Err(());
         }
-        unwrap!(uart.flush().await);
+        uart.flush().await.unwrap();
 
         // Clear the echo
-        trace!("...reading echo");
+        defmt::trace!("...reading echo");
         let mut buffer: [u8; tmc2209::WriteRequest::LEN_BYTES] =
             [0; tmc2209::WriteRequest::LEN_BYTES];
         match uart.read_exact(&mut buffer).await {
-            Ok(_) => trace!("echo received\n{}", buffer),
+            Ok(_) => defmt::trace!("echo received\n{}", buffer),
             Err(e) => {
-                error!("{}", e);
+                defmt::error!("{}", e);
                 panic!();
             }
         }
@@ -105,9 +105,10 @@ impl Tmc2209UartConnection {
         if (prev_change_count + 1) % 256 == new_change_count {
             Ok(new_change_count)
         } else {
-            error!(
+            defmt::error!(
                 "change count mismatch: {} + 1 != {}",
-                prev_change_count, new_change_count
+                prev_change_count,
+                new_change_count
             );
             Err(())
         }
@@ -126,40 +127,39 @@ async fn read_register_internal<'d, P: uart::Instance>(
     );
 
     // Size the read buffer to hold the echo'd request and the response
-    uart.set_rx_fifo_full_threshold(
-        (tmc2209::ReadRequest::LEN_BYTES + tmc2209::ReadResponse::LEN_BYTES) as u16,
-    )
-    .unwrap();
+    const READ_BUFFER_LENGTH: usize =
+        tmc2209::ReadRequest::LEN_BYTES + tmc2209::ReadResponse::LEN_BYTES;
+
+    // Set read buffer size, and reset interrupt
+    uart.reset_rx_fifo_full_interrupt();
+    uart.set_rx_fifo_full_threshold(READ_BUFFER_LENGTH as u16)
+        .unwrap();
 
     let req = tmc2209::ReadRequest::from_addr(uart_address, register_address);
-    defmt::debug!("bytes: {}", req.bytes(),);
-
-    if let Err(e) = uart.write_bytes(req.bytes()) {
-        error!("{:?}", e);
+    defmt::trace!("read request bytes: {}", req.bytes());
+    if let Err(e) = uart.write_all(req.bytes()).await {
+        defmt::error!("{:?}", e);
         return Err(());
     }
 
-    defmt::debug!(
+    let mut buffer: [u8; tmc2209::ReadRequest::LEN_BYTES + tmc2209::ReadResponse::LEN_BYTES] =
+        [0; tmc2209::ReadRequest::LEN_BYTES + tmc2209::ReadResponse::LEN_BYTES];
+    defmt::trace!(
         "...reading echo and response, rx interrupt: {}",
         uart.rx_fifo_full_interrupt_set()
     );
-    let mut buffer: [u8; tmc2209::ReadRequest::LEN_BYTES + tmc2209::ReadResponse::LEN_BYTES] =
-        [0; tmc2209::ReadRequest::LEN_BYTES + tmc2209::ReadResponse::LEN_BYTES];
-
     match uart.read_exact(&mut buffer).await {
         Ok(_) => {
-            defmt::debug!("bytes read\n {}", buffer);
+            defmt::trace!("bytes read\n {}", buffer);
         }
         Err(e) => {
-            error!("{}", e);
+            defmt::error!("{}", e);
             panic!();
         }
     }
 
     let mut reader = tmc2209::Reader::default();
-
-    defmt::debug!("...reading response");
-
+    defmt::trace!("...reading response");
     match reader.read_response(&buffer[tmc2209::ReadRequest::LEN_BYTES..12]) {
         (_, Some(res)) => {
             let state = res.reg_state().unwrap();
@@ -167,8 +167,8 @@ async fn read_register_internal<'d, P: uart::Instance>(
             Ok(state)
         }
         (bytes, _) => {
-            error!("no response: {} bytes read", bytes);
-            error!("{}", &buffer);
+            defmt::error!("no response: {} bytes read", bytes);
+            defmt::error!("{}", &buffer);
             Err(())
         }
     }

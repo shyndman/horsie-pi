@@ -30,10 +30,11 @@ use esp_hal_procmacros::main;
 use esp_hal_smartled::{smartLedAdapter, SmartLedsAdapter};
 use esp_println::logger::init_logger_from_env;
 use peripheral_controller::{
-    self as _, init_heap,
+    init_heap,
     stepper::{
-        motor_constants::NEMA8_S20STH30_0604A_CONSTANTS, tune::tune_driver,
-        uart::Tmc2209UartConnection,
+        motor_constants::NEMA8_S20STH30_0604A_CONSTANTS,
+        tune::tune_driver,
+        uart::{Tmc2209UartConnection, UART_BAUD_RATE},
     },
 };
 use rgb::RGB8;
@@ -71,10 +72,10 @@ async fn main(spawner: Spawner) {
     ))
     .unwrap();
 
-    let uart1 = Uart::new_with_config(
-        peripherals.UART1,
+    let uart2 = Uart::new_with_config(
+        peripherals.UART2,
         uart::config::Config {
-            baudrate: 115200,
+            baudrate: UART_BAUD_RATE,
             ..uart::config::Config::default()
         },
         Some(uart::TxRxPins::new_tx_rx(
@@ -83,8 +84,27 @@ async fn main(spawner: Spawner) {
         )),
         &clocks,
     );
-    interrupt::enable(Interrupt::UART1, interrupt::Priority::Priority1).unwrap();
-    spawner.spawn(configure_stepper_drivers(uart1)).unwrap();
+    let reg = esp32s3_hal::peripherals::UART2::register_block();
+    reg.conf0.modify(|_, w| {
+        w.rxfifo_rst().set_bit();
+        w
+    });
+    reg.conf0.modify(|_, w| {
+        w.rxfifo_rst().clear_bit();
+        w
+    });
+    reg.conf0.modify(|_, w| {
+        w.txfifo_rst().set_bit();
+        w
+    });
+    reg.conf0.modify(|_, w| {
+        w.txfifo_rst().clear_bit();
+        w
+    });
+
+    interrupt::enable(Interrupt::UART2, interrupt::Priority::Priority1).unwrap();
+    uart2.reset_rx_fifo_full_interrupt();
+    spawner.spawn(configure_stepper_drivers(uart2)).unwrap();
 
     loop {
         Timer::after(Duration::from_secs(30)).await;
@@ -92,7 +112,7 @@ async fn main(spawner: Spawner) {
 }
 
 #[embassy_executor::task]
-async fn configure_stepper_drivers(mut uart: Uart<'static, esp32s3_hal::peripherals::UART1>) {
+async fn configure_stepper_drivers(mut uart: Uart<'static, esp32s3_hal::peripherals::UART2>) {
     defmt::info!("Configuring stepper driver");
     Timer::after(Duration::from_secs(1)).await;
 
@@ -102,6 +122,12 @@ async fn configure_stepper_drivers(mut uart: Uart<'static, esp32s3_hal::peripher
     defmt::info!("Tuning pan driver");
     tune_driver(&mut pan_driver, NEMA8_S20STH30_0604A_CONSTANTS, &mut uart).await;
     defmt::info!("Tuned!");
+
+    let tstep = pan_driver
+        .read_register::<tmc2209::reg::TSTEP, esp32s3_hal::peripherals::UART2>(&mut uart)
+        .await
+        .unwrap();
+    defmt::info!("TSTEP is {}", tstep.0);
 
     let mut vactual = VACTUAL::default();
     vactual.0 = 4000;
