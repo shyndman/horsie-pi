@@ -78,6 +78,12 @@ dependencies = [
 
 [[package]]
 name = "bitfield"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46afbd2983a5d5a7bd740ccb198caf5b82f45c40c09c0eed36052d91cb92e719"
+
+[[package]]
+name = "bitfield"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d7e60934ceec538daadb9d8432424ed043a904d8e0243f3c6446bce549a46ac"
@@ -232,7 +238,7 @@ name = "drv2605l"
 version = "0.1.0"
 source = "git+https://github.com/shyndman/drv2605l-rs?rev=59b844612889a49f552c63855000e0487e29cb80#59b844612889a49f552c63855000e0487e29cb80"
 dependencies = [
- "bitfield",
+ "bitfield 0.14.0",
  "defmt",
  "embedded-hal 1.0.0-rc.1",
  "embedded-hal-async",
@@ -375,27 +381,21 @@ dependencies = [
 
 [[package]]
 name = "embedded-io"
-version = "0.5.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "658bbadc628dc286b9ae02f0cb0f5411c056eb7487b72f0083203f115de94060"
+checksum = "edd0f118536f44f5ccd48bcb8b111bdc3de888b58c74639dfb034a357d0f206d"
 dependencies = [
  "defmt",
 ]
 
 [[package]]
-name = "embedded-io"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edd0f118536f44f5ccd48bcb8b111bdc3de888b58c74639dfb034a357d0f206d"
-
-[[package]]
 name = "embedded-io-async"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1394754ad749a560b25a0c70dcd2b66a450824a1311fc475bb2ccbfabe7f8414"
+checksum = "de03527d6fb488b2d7c7a4dc81dfb6a657efe264256bfc70bb899746821666b1"
 dependencies = [
  "defmt",
- "embedded-io 0.5.0",
+ "embedded-io",
 ]
 
 [[package]]
@@ -420,7 +420,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15b1a857f242e7cfeaeae173f8618750b496de21f43ac3e8963404a17498e2e1"
 dependencies = [
  "atomic-waker",
- "embedded-io 0.6.1",
+ "embedded-io",
  "enumset",
  "heapless",
  "no-std-net",
@@ -488,10 +488,10 @@ dependencies = [
 [[package]]
 name = "esp-hal-common"
 version = "0.12.0"
-source = "git+https://github.com/esp-rs/esp-hal?rev=29f3518c047fa31ad29a70f0ee73e3484af6c8d8#29f3518c047fa31ad29a70f0ee73e3484af6c8d8"
+source = "git+https://github.com/esp-rs/esp-hal?rev=29ebd170eee686e61683ae704d7e9b4a834040a0#29ebd170eee686e61683ae704d7e9b4a834040a0"
 dependencies = [
  "basic-toml",
- "bitfield",
+ "bitfield 0.14.0",
  "bitflags 2.4.1",
  "cfg-if",
  "critical-section",
@@ -506,11 +506,11 @@ dependencies = [
  "embedded-hal 1.0.0-rc.1",
  "embedded-hal-async",
  "embedded-hal-nb",
- "embedded-io 0.5.0",
+ "embedded-io",
  "embedded-io-async",
  "esp-hal-procmacros",
  "esp-synopsys-usb-otg",
- "esp32s3 0.21.0 (git+https://github.com/esp-rs/esp-pacs?rev=1b1ce7b)",
+ "esp32s3",
  "fugit",
  "nb 1.1.0",
  "paste",
@@ -525,7 +525,7 @@ dependencies = [
 [[package]]
 name = "esp-hal-procmacros"
 version = "0.6.1"
-source = "git+https://github.com/esp-rs/esp-hal?rev=29f3518c047fa31ad29a70f0ee73e3484af6c8d8#29f3518c047fa31ad29a70f0ee73e3484af6c8d8"
+source = "git+https://github.com/esp-rs/esp-hal?rev=29ebd170eee686e61683ae704d7e9b4a834040a0#29ebd170eee686e61683ae704d7e9b4a834040a0"
 dependencies = [
  "darling",
  "litrs",
@@ -540,7 +540,7 @@ dependencies = [
 [[package]]
 name = "esp-hal-smartled"
 version = "0.5.0"
-source = "git+https://github.com/esp-rs/esp-hal?rev=29f3518c047fa31ad29a70f0ee73e3484af6c8d8#29f3518c047fa31ad29a70f0ee73e3484af6c8d8"
+source = "git+https://github.com/esp-rs/esp-hal?rev=29ebd170eee686e61683ae704d7e9b4a834040a0#29ebd170eee686e61683ae704d7e9b4a834040a0"
 dependencies = [
  "defmt",
  "esp-hal-common",
@@ -572,18 +572,9 @@ dependencies = [
 
 [[package]]
 name = "esp32s3"
-version = "0.21.0"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6991fd4a8ac00e7be2646a09c3da992b69e57a0b1da2570c4cd5a58c613a3a11"
-dependencies = [
- "vcell",
- "xtensa-lx",
-]
-
-[[package]]
-name = "esp32s3"
-version = "0.21.0"
-source = "git+https://github.com/esp-rs/esp-pacs?rev=1b1ce7b#1b1ce7ba631cb349a8255f5959e768d5c52fad40"
+checksum = "d963e4278c6417d939dd3791f144b89341abd387cc1bf612fbbd4cf585c0f669"
 dependencies = [
  "critical-section",
  "vcell",
@@ -593,7 +584,7 @@ dependencies = [
 [[package]]
 name = "esp32s3-hal"
 version = "0.12.0"
-source = "git+https://github.com/esp-rs/esp-hal?rev=29f3518c047fa31ad29a70f0ee73e3484af6c8d8#29f3518c047fa31ad29a70f0ee73e3484af6c8d8"
+source = "git+https://github.com/esp-rs/esp-hal?rev=29ebd170eee686e61683ae704d7e9b4a834040a0#29ebd170eee686e61683ae704d7e9b4a834040a0"
 dependencies = [
  "embassy-time",
  "esp-hal-common",
@@ -819,6 +810,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f665ee40bc4a3c5590afb1e9677db74a508659dfd71e126420da8274909a0167"
 
 [[package]]
+name = "micromath"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39617bc909d64b068dcffd0e3e31679195b5576d0c83fadc52690268cc2b2b55"
+
+[[package]]
 name = "minijinja"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -902,25 +899,28 @@ dependencies = [
  "embedded-hal 0.2.7",
  "embedded-hal 1.0.0-rc.1",
  "embedded-hal-async",
- "embedded-io 0.5.0",
+ "embedded-io",
  "embedded-io-async",
  "embedded-svc",
  "esp-alloc",
  "esp-backtrace",
+ "esp-hal-common",
  "esp-hal-procmacros",
  "esp-hal-smartled",
  "esp-println",
- "esp32s3 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "esp32s3",
  "esp32s3-hal",
  "futures",
  "heapless",
  "hp-embedded-drivers",
  "log",
+ "micromath",
  "rgb",
  "smart-leds",
  "smart-leds-trait",
  "smoltcp",
  "static_cell",
+ "tmc2209",
  "usb-device",
  "usbd-serial",
  "vl6180x",
@@ -1269,6 +1269,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.38",
+]
+
+[[package]]
+name = "tmc2209"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2552dbf5901e37abcd381f930731432d2c952245fe277eadcf3e03ac438a2783"
+dependencies = [
+ "bitfield 0.13.2",
+ "embedded-hal 0.2.7",
 ]
 
 [[package]]

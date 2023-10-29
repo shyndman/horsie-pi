@@ -8,11 +8,12 @@
     exclusive_range_pattern,
     impl_trait_projections,
     return_position_impl_trait_in_trait,
-    type_alias_impl_trait,
+    type_alias_impl_trait
 )]
 #![test_runner(run_tests)]
 
 pub mod panic;
+pub mod stepper;
 pub mod ui;
 
 use core::mem::MaybeUninit;

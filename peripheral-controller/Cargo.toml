@@ -23,21 +23,21 @@ embassy-time = {version = "0.1.5", features = ["unstable-traits"]}
 embedded-hal = {package = "embedded-hal", version = "0.2.7"}
 embedded-hal_1 = {package = "embedded-hal", version = "1.0.0-rc.1"}
 embedded-hal-async = "1.0.0-rc.1"
-embedded-io = "0.5.0"
-embedded-io-async = "0.5.0"
+embedded-io = "0.6.1"
+embedded-io-async = "0.6.0"
 embedded-svc = {version = "0.26.1", default-features = false, features = []}
 esp-alloc = {version = "0.3.0"}
 esp-backtrace = {version = "0.8.0", features = [
   "esp32s3",
   "exception-handler",
-  "panic-handler",
+  # "panic-handler",
   "print-jtag-serial",
 ]}
-esp-hal-procmacros = {git = "https://github.com/esp-rs/esp-hal", rev = "29f3518c047fa31ad29a70f0ee73e3484af6c8d8", package = "esp-hal-procmacros", features = [
+esp-hal-procmacros = {git = "https://github.com/esp-rs/esp-hal", rev = "29ebd170eee686e61683ae704d7e9b4a834040a0", package = "esp-hal-procmacros", features = [
   "embassy",
   "esp32s3",
 ]}
-esp-hal-smartled = {git = "https://github.com/esp-rs/esp-hal", rev = "29f3518c047fa31ad29a70f0ee73e3484af6c8d8", package = "esp-hal-smartled", features = [
+esp-hal-smartled = {git = "https://github.com/esp-rs/esp-hal", rev = "29ebd170eee686e61683ae704d7e9b4a834040a0", package = "esp-hal-smartled", features = [
   "esp32s3",
   "defmt",
 ]}
@@ -47,8 +47,8 @@ esp-println = {version = "0.6.0", default-features = false, features = [
   "jtag_serial",
   "log",
 ]}
-esp32s3 = {version = "0.21.0", features = ["impl-register-debug", "rt"]}
-esp32s3-hal = {git = "https://github.com/esp-rs/esp-hal", rev = "29f3518c047fa31ad29a70f0ee73e3484af6c8d8", package = "esp32s3-hal", features = [
+esp32s3 = {version = "0.22.0", features = ["impl-register-debug", "rt"]}
+esp32s3-hal = {git = "https://github.com/esp-rs/esp-hal", rev = "29ebd170eee686e61683ae704d7e9b4a834040a0", package = "esp32s3-hal", features = [
   "async",
   "defmt",
   "eh1",
@@ -57,9 +57,18 @@ esp32s3-hal = {git = "https://github.com/esp-rs/esp-hal", rev = "29f3518c047fa31
   "embassy-time-systick",
   "rt",
 ]}
+esp-hal-common = {git = "https://github.com/esp-rs/esp-hal", rev = "29ebd170eee686e61683ae704d7e9b4a834040a0", package = "esp-hal-common", features = [
+  "async",
+  "defmt",
+  "eh1",
+  "embassy",
+  "embassy-executor-thread",
+  "embassy-time-systick",
+]}
 futures = {version = "0.3.28", default-features = false}
 heapless = {version = "0.7.14", default-features = false}
 log = {version = "0.4.18"}
+micromath = "2.0.0"
 rgb = {version = "0.8.36"}
 smart-leds = {version = "0.3.0"}
 smart-leds-trait = "0.2.1"
@@ -75,6 +84,7 @@ smoltcp = {version = "0.10.0", default-features = false, features = [
   "socket-udp",
 ]}
 static_cell = {version = "1.2.0", features = ["nightly"]}
+tmc2209 = "0.2.2"
 usb-device = {version = "0.2.9", features = ["defmt"]}
 usbd-serial = "0.1.1"
 

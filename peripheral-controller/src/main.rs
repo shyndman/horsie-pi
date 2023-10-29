@@ -16,33 +16,41 @@ extern crate alloc;
 
 use bh1750_async::BH1750;
 use defmt::Debug2Format;
-use defmt_macros::unwrap;
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
-use embassy_sync::{
-    blocking_mutex::raw::{CriticalSectionRawMutex, NoopRawMutex},
-    mutex::Mutex,
-};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Instant, Timer};
+use embedded_hal_async::digital::Wait;
 use esp32s3_hal::{
     self,
     clock::ClockControl,
     embassy, entry,
-    gpio::{AnyPin, Gpio18, Output, PushPull},
+    gpio::{
+        AnyPin, Gpio18, Gpio6, Input, Output, PullDown, PushPull, RTCPin, RTCPinWithResistors,
+    },
     i2c::I2C,
     interrupt,
     mcpwm::{PeripheralClockConfig, MCPWM},
     peripherals::{Interrupt, Peripherals},
     prelude::*,
+    rtc_cntl::{
+        get_reset_reason, get_wakeup_cause,
+        sleep::{RtcioWakeupSource, WakeupLevel},
+        SocResetReason,
+    },
     system::SystemParts,
-    uart, Rmt, Uart, IO,
+    uart, Rmt, Rtc, Uart, IO,
 };
 use esp_hal_procmacros::main;
 use esp_hal_smartled::{smartLedAdapter, SmartLedsAdapter};
 use esp_println::logger::init_logger_from_env;
-use hp_embedded_drivers::{husb238_async::Husb238, ina260_async::Ina260};
+use hp_embedded_drivers::ina260_async::Ina260;
 use peripheral_controller::{
     init_heap,
+    stepper::{
+        motor_constants::NEMA11_11HS18_0674S_CONSTANTS, tune::tune_driver,
+        uart::Tmc2209UartConnection,
+    },
     ui::{color::rgb_color_wheel, rgb_button::RgbButton},
 };
 use smart_leds::brightness;
@@ -75,17 +83,37 @@ async fn main(spawner: Spawner) {
     )
     .unwrap();
 
-    let rmt = Rmt::new(peripherals.RMT, 80u32.MHz(), &clocks).unwrap();
+    let rtc = Rtc::new(peripherals.RTC_CNTL);
+    spawner
+        .spawn(sleep_on_power_button_up(
+            rtc,
+            io.pins.gpio6.into_pull_down_input(),
+            esp32s3_hal::Delay::new(&clocks),
+        ))
+        .unwrap();
+
     let uart1 = Uart::new_with_config(
         peripherals.UART1,
         uart::config::Config {
             baudrate: 115_200,
             ..uart::config::Config::default()
         },
-        Some(uart::TxRxPins::new_tx_rx(io.pins.gpio7, io.pins.gpio6)),
+        Some(uart::TxRxPins::new_tx_rx(io.pins.gpio35, io.pins.gpio37)),
         &clocks,
     );
     interrupt::enable(Interrupt::UART1, interrupt::Priority::Priority1).unwrap();
+
+    let uart2 = Uart::new_with_config(
+        peripherals.UART2,
+        uart::config::Config {
+            baudrate: 1024,
+            ..uart::config::Config::default()
+        },
+        Some(uart::TxRxPins::new_tx_rx(io.pins.gpio1, io.pins.gpio2)),
+        &clocks,
+    );
+    // uart2.set_at_cmd(AtCmdConfig::new(None, None, None, AT_CMD, None));
+    interrupt::enable(Interrupt::UART2, interrupt::Priority::Priority1).unwrap();
 
     let i2c0 = I2C::new(
         peripherals.I2C0,
@@ -100,20 +128,7 @@ async fn main(spawner: Spawner) {
         I2C<'static, esp32s3_hal::peripherals::I2C0>,
     > = make_static!({ Mutex::<CriticalSectionRawMutex, _>::new(i2c0) });
 
-    spawner.spawn(run_host_communication(uart1)).unwrap();
-    spawner
-        .spawn(read_power_metrics(
-            I2cDevice::new(i2c0_bus),
-            I2cDevice::new(i2c0_bus),
-        ))
-        .unwrap();
-    spawner
-        .spawn(detect_light_levels(I2cDevice::new(i2c0_bus)))
-        .unwrap();
-    spawner
-        .spawn(detect_user_proximity(I2cDevice::new(i2c0_bus)))
-        .unwrap();
-
+    let rmt = Rmt::new(peripherals.RMT, 80u32.MHz(), &clocks).unwrap();
     let peripheral_clock_config =
         PeripheralClockConfig::with_frequency(&clocks, 40u32.MHz()).unwrap();
     let power_button = RgbButton::new(
@@ -127,6 +142,19 @@ async fn main(spawner: Spawner) {
         io.pins.gpio39.into_push_pull_output().degrade(),
         peripheral_clock_config,
     );
+
+    spawner.spawn(configure_stepper_drivers(uart2)).unwrap();
+    spawner.spawn(run_host_communication(uart1)).unwrap();
+    spawner
+        .spawn(read_power_metrics(
+            I2cDevice::new(i2c0_bus),
+            I2cDevice::new(i2c0_bus),
+        ))
+        .unwrap();
+    spawner
+        .spawn(detect_user_proximity(I2cDevice::new(i2c0_bus)))
+        .unwrap();
+
     spawner
         .spawn(run_color_wheel(
             rmt,
@@ -145,13 +173,39 @@ async fn main(spawner: Spawner) {
 }
 
 #[embassy_executor::task]
+async fn sleep_on_power_button_up(
+    mut rtc: Rtc<'static>,
+    mut sleep_trigger_pin: Gpio6<Input<PullDown>>,
+    mut delay: esp32s3_hal::Delay,
+) -> ! {
+    let reason =
+        get_reset_reason(esp32s3_hal::Cpu::ProCpu).unwrap_or(SocResetReason::ChipPowerOn);
+    defmt::info!("reset reason: {:?}", Debug2Format(&reason));
+    let wake_reason = get_wakeup_cause();
+    defmt::info!("wake reason: {:?}", Debug2Format(&wake_reason));
+
+    sleep_trigger_pin.rtcio_pad_hold(true);
+    sleep_trigger_pin.rtcio_pulldown(true);
+
+    defmt::info!("Waiting for sleep trigger pin to go low");
+    sleep_trigger_pin.wait_for_low().await.unwrap();
+    defmt::info!("Sleep trigger pin is HIGH");
+    defmt::info!("Going to sleep");
+
+    let mut wakeup_pins: [(&mut dyn RTCPin, WakeupLevel); 1] =
+        [(&mut sleep_trigger_pin, WakeupLevel::High)];
+    let rtcio_wakeup = RtcioWakeupSource::new(&mut wakeup_pins);
+    rtc.sleep_deep(&[&rtcio_wakeup], &mut delay);
+}
+
+#[embassy_executor::task]
 async fn run_color_wheel(
     rmt: Rmt<'static>,
     mut power_pin: AnyPin<Output<PushPull>>,
     data_pin: AnyPin<Output<PushPull>>,
     mut power_button: RgbButton<'static>,
 ) {
-    unwrap!(power_pin.set_high());
+    power_pin.set_high().unwrap();
     let data_pin: Gpio18<Output<PushPull>> = data_pin.try_into().unwrap();
 
     let mut led = <smartLedAdapter!(0, 1)>::new(rmt.channel0, data_pin);
@@ -169,15 +223,39 @@ async fn run_color_wheel(
 }
 
 #[embassy_executor::task]
-async fn run_host_communication(mut uart: Uart<'static, esp32s3_hal::peripherals::UART1>) {
+async fn run_host_communication(mut uart1: Uart<'static, esp32s3_hal::peripherals::UART1>) {
     loop {
-        match embedded_io_async::Write::write_all(&mut uart, "hello hello\n".as_bytes()).await
+        match embedded_io_async::Write::write_all(&mut uart1, "hello hello\n".as_bytes())
+            .await
         {
             Ok(_) => {
                 //defmt::debug!("uart1 write successful")
             }
             Err(e) => defmt::error!("uart1 write failure, {}", e),
         }
+        Timer::after(Duration::from_secs(2)).await;
+    }
+}
+
+#[embassy_executor::task]
+async fn configure_stepper_drivers(
+    mut uart2: Uart<'static, esp32s3_hal::peripherals::UART2>,
+) {
+    defmt::info!("Configuring stepper drivers");
+    Timer::after(Duration::from_secs(1)).await;
+
+    let mut pan_driver = Tmc2209UartConnection::connect(&mut uart2, 0x00).await;
+    defmt::info!("Connected to pan driver");
+
+    // let mut tilt_driver = Tmc2209UartConnection::connect(&mut uart2, 0x01).await;
+
+    defmt::info!("Tuning pan driver");
+    tune_driver(&mut pan_driver, NEMA11_11HS18_0674S_CONSTANTS, &mut uart2).await;
+    defmt::info!("Tuned!");
+
+    // tune_driver(&mut tilt_driver, NEMA8_S20STH30_0604A_CONSTANTS, &mut uart2).await;
+
+    loop {
         Timer::after(Duration::from_secs(2)).await;
     }
 }
@@ -216,9 +294,10 @@ async fn detect_user_proximity(i2c_device: PeripheralI2cLink) {
 
     defmt::info!("Attempting to communicate with VL6180");
 
-    static RANGE_INTER_MEASUREMENT_MS: u64 = 200;
+    static RANGE_INTER_MEASUREMENT_MS: u16 = 100;
     let mut c = vl6180x_async::Config::new();
-    c.set_range_inter_measurement_period(200).unwrap();
+    c.set_range_inter_measurement_period(RANGE_INTER_MEASUREMENT_MS)
+        .unwrap();
 
     let tof_sensor = match VL6180X::with_config(i2c_device, &c).await {
         Ok(device) => {
@@ -237,38 +316,32 @@ async fn detect_user_proximity(i2c_device: PeripheralI2cLink) {
         .unwrap();
 
     loop {
-        Timer::after(Duration::from_secs(4)).await;
-
-        let lux = match tof_sensor.read_ambient_lux_blocking().await {
-            Ok(lux) => lux,
+        Timer::after(Duration::from_secs(2)).await;
+        match tof_sensor.read_ambient_lux_blocking().await {
+            Ok(lux) => {
+                defmt::info!("Light level: {} lx", lux);
+            }
             Err(e) => {
                 defmt::warn!("Error while reading ambient light, {}", e);
-                continue;
             }
         };
+        Timer::after(Duration::from_millis(RANGE_INTER_MEASUREMENT_MS as u64)).await;
 
-        Timer::after(Duration::from_millis(RANGE_INTER_MEASUREMENT_MS * 2)).await;
-        let range_mm = match tof_sensor.read_range_mm_blocking().await {
-            Ok(mm) => mm,
+        match tof_sensor.read_range_mm_blocking().await {
+            Ok(mm) => defmt::info!("Range to object: {} mm", mm),
             Err(vl6180x_async::Error::RangeStatusError(code)) => {
-                defmt::warn!("Range status error error: {}", code);
-                continue;
+                defmt::warn!("Range status error error: {}", code)
             }
-            Err(e) => {
-                defmt::error!("Error while reading range, {}", e);
-                continue;
-            }
+            Err(e) => defmt::error!("Error while reading range, {}", e),
         };
-
-        defmt::info!("{}lx {}mm", lux, range_mm);
+        Timer::after(Duration::from_millis(RANGE_INTER_MEASUREMENT_MS as u64)).await;
     }
-    // tof_sensor.read_range_mm_blocking()
 }
 
 #[embassy_executor::task]
 async fn read_power_metrics(
     ina260_i2c_device: PeripheralI2cLink,
-    husb238_i2c_device: PeripheralI2cLink,
+    _husb238_i2c_device: PeripheralI2cLink,
 ) {
     defmt::info!("Attempting to communicate with INA260");
     let mut ina260 = match Ina260::new(ina260_i2c_device).await {
@@ -282,17 +355,17 @@ async fn read_power_metrics(
         }
     };
 
-    defmt::info!("Attempting to communicate with HUSB238");
-    let mut husb238 = match Husb238::new(husb238_i2c_device).await {
-        Ok(device) => {
-            defmt::info!("Established contact");
-            device
-        }
-        Err(e) => {
-            defmt::error!("ERROR, {}", e);
-            return;
-        }
-    };
+    // defmt::info!("Attempting to communicate with HUSB238");
+    // let mut husb238 = match Husb238::new(husb238_i2c_device).await {
+    //     Ok(device) => {
+    //         defmt::info!("Established contact");
+    //         device
+    //     }
+    //     Err(e) => {
+    //         defmt::error!("ERROR, {}", e);
+    //         return;
+    //     }
+    // };
 
     // husb238.is_voltage_detected(pd)
 

@@ -8,12 +8,11 @@
     exclusive_range_pattern,
     impl_trait_projections,
     return_position_impl_trait_in_trait,
-    type_alias_impl_trait,
+    type_alias_impl_trait
 )]
 
 extern crate alloc;
 
-use defmt::Debug2Format;
 use defmt_macros::unwrap;
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
