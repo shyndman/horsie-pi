@@ -1,4 +1,7 @@
 {
     "rust-analyzer.checkOnSave.allTargets": false,
     "evenBetterToml.schema.enabled": false,
+    "[rust]": {
+        "editor.tabSize": 4
+    }
 }
