@@ -1,0 +1,10 @@
+stl_path = "stl/"
+step_path = "step/"
+
+[document]
+id = "931b9cd9becb99b51d848110"
+workspace_id = "7c4104c68ccc35c024281cf7"
+
+[[part_studio]]
+display_name = "Strain relief"
+id = "d6621987a102acbf57865b71"
