@@ -69,6 +69,14 @@ impl<M: RawMutex, P: 'static + esp_hal_common::uart::Instance> Tmc2209UartConnec
     {
         defmt::info!("Write register {:?}", defmt::Debug2Format(&register));
 
+        // Size the read buffer to hold the echo'd request and the response
+        const READ_BUFFER_LENGTH: usize = tmc2209::WriteRequest::LEN_BYTES;
+
+        // Set read buffer size, and reset interrupt
+        self.uart_device
+            .prepare_receive_buffer::<READ_BUFFER_LENGTH>()
+            .await;
+
         let req = tmc2209::WriteRequest::new(self.uart_address, register);
         defmt::trace!("write request: {}", req.bytes());
         if let Err(e) = self.uart_device.write_all(req.bytes()).await {

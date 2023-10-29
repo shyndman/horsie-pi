@@ -17,7 +17,7 @@ extern crate alloc;
 
 use embassy_executor::Spawner;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
-use embassy_time::{Duration, Timer};
+use embassy_time::{Duration, Instant, Timer};
 use esp32s3_hal::{
     self,
     clock::ClockControl,
@@ -129,9 +129,9 @@ async fn configure_stepper_drivers(uart2: Uart<'static, esp32s3_hal::peripherals
     defmt::info!("Connected to pan driver");
 
     defmt::info!("Tuning pan driver");
+    let start_ts = Instant::now();
     tune_driver(&mut pan_driver, NEMA8_S20STH30_0604A_CONSTANTS).await;
-    defmt::info!("Tuned!");
-
+    defmt::info!("Tuned in {}ms", (Instant::now() - start_ts).as_millis());
     let tstep = pan_driver
         .read_register::<tmc2209::reg::TSTEP>()
         .await

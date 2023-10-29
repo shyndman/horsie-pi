@@ -45,4 +45,15 @@ impl<'a, M: RawMutex, P: 'static + esp_hal_common::uart::Instance> UartDevice<'a
         bus.reset_rx_fifo_full_interrupt();
         bus.set_rx_fifo_full_threshold(BUF_LEN as u16).unwrap();
     }
+
+    // TODO(shyndman): The TMC2209 UART layer NEEDs this to safely access the serial line.
+    // Implement!
+    //
+    // pub async fn transaction<F: FnMut(&mut Uart<'static, P>)>(
+    //     &mut self,
+    //     mut critical_section: F,
+    // ) {
+    //     let mut bus = self.bus.lock().await;
+    //     critical_section(bus.borrow_mut());
+    // }
 }
