@@ -27,6 +27,11 @@ use esp32s3_hal::{
     system::SystemParts,
     uart, Rmt, Uart, IO,
 };
+use esp_hal_common::{
+    clock::Clocks,
+    gpio::{InputPin, OutputPin},
+    peripheral::Peripheral,
+};
 use esp_hal_procmacros::main;
 use esp_hal_smartled::{smartLedAdapter, SmartLedsAdapter};
 use esp_println::logger::init_logger_from_env;
@@ -65,29 +70,49 @@ async fn main(spawner: Spawner) {
 
     Timer::after(Duration::from_secs(1)).await;
 
-    let mut neopixel_power_pin = io.pins.gpio17.into_push_pull_output();
-    neopixel_power_pin.set_high().unwrap();
-    let neopixel_data_pin = io.pins.gpio18.into_push_pull_output();
-    let mut led = <smartLedAdapter!(0, 1)>::new(rmt.channel0, neopixel_data_pin);
-    led.write(brightness(
-        core::iter::once(RGB8::new(0xFF, 0x00, 0xFF)),
-        90,
-    ))
-    .unwrap();
+    {
+        io.pins.gpio17.into_push_pull_output().set_high().unwrap();
+        let mut led = <smartLedAdapter!(0, 1)>::new(
+            rmt.channel0,
+            io.pins.gpio18.into_push_pull_output(),
+        );
+        led.write(brightness(
+            core::iter::once(RGB8::new(0xFF, 0x00, 0xFF)),
+            90,
+        ))
+        .unwrap();
+    }
 
-    let uart2 = Uart::new_with_config(
+    let uart2 = new_uart_bus(
         peripherals.UART2,
+        io.pins.gpio21.into_push_pull_output(),
+        io.pins.gpio5.into_floating_input(),
+        &clocks,
+    );
+
+    spawner.spawn(configure_stepper_drivers(uart2)).unwrap();
+
+    loop {
+        Timer::after(Duration::from_secs(30)).await;
+    }
+}
+
+fn new_uart_bus<P: esp_hal_common::uart::Instance, TX: OutputPin, RX: InputPin>(
+    peripheral: impl Peripheral<P = P> + 'static,
+    tx_pin: impl Peripheral<P = TX>,
+    rx_pin: impl Peripheral<P = RX>,
+    clocks: &Clocks,
+) -> Uart<'static, P> {
+    let uart = Uart::new_with_config(
+        peripheral,
         uart::config::Config {
             baudrate: UART_BAUD_RATE,
             ..uart::config::Config::default()
         },
-        Some(uart::TxRxPins::new_tx_rx(
-            io.pins.gpio21.into_push_pull_output(),
-            io.pins.gpio5.into_floating_input(),
-        )),
-        &clocks,
+        Some(uart::TxRxPins::new_tx_rx(tx_pin, rx_pin)),
+        clocks,
     );
-    let reg = esp32s3_hal::peripherals::UART2::register_block();
+    let reg = P::register_block();
     reg.conf0.modify(|_, w| {
         w.rxfifo_rst().set_bit();
         w
@@ -104,14 +129,10 @@ async fn main(spawner: Spawner) {
         w.txfifo_rst().clear_bit();
         w
     });
-
+    interrupt::enable(Interrupt::UART0, interrupt::Priority::Priority1).unwrap();
+    interrupt::enable(Interrupt::UART1, interrupt::Priority::Priority1).unwrap();
     interrupt::enable(Interrupt::UART2, interrupt::Priority::Priority1).unwrap();
-    uart2.reset_rx_fifo_full_interrupt();
-    spawner.spawn(configure_stepper_drivers(uart2)).unwrap();
-
-    loop {
-        Timer::after(Duration::from_secs(30)).await;
-    }
+    uart
 }
 
 #[embassy_executor::task]
@@ -124,8 +145,9 @@ async fn configure_stepper_drivers(uart2: Uart<'static, esp32s3_hal::peripherals
         Uart<'static, esp32s3_hal::peripherals::UART2>,
     > = make_static!({ Mutex::<CriticalSectionRawMutex, _>::new(uart2) });
 
-    let mut pan_driver =
-        Tmc2209UartConnection::connect(UartDevice::new(uart2_bus), 0x00).await;
+    let mut pan_driver = Tmc2209UartConnection::connect(UartDevice::new(uart2_bus), 0x00)
+        .await
+        .unwrap();
     defmt::info!("Connected to pan driver");
 
     defmt::info!("Tuning pan driver");

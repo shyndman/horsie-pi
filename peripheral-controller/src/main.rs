@@ -247,8 +247,9 @@ async fn configure_stepper_drivers(uart2: Uart<'static, esp32s3_hal::peripherals
         CriticalSectionRawMutex,
         Uart<'static, esp32s3_hal::peripherals::UART2>,
     > = make_static!({ Mutex::<CriticalSectionRawMutex, _>::new(uart2) });
-    let mut pan_driver =
-        Tmc2209UartConnection::connect(UartDevice::new(uart2_bus), 0x00).await;
+    let mut pan_driver = Tmc2209UartConnection::connect(UartDevice::new(uart2_bus), 0x00)
+        .await
+        .unwrap();
     defmt::info!("Connected to pan driver");
 
     // let mut tilt_driver = Tmc2209UartConnection::connect(&mut uart2, 0x01).await;

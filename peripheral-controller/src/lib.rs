@@ -4,6 +4,7 @@
     asm_experimental_arch,
     async_fn_in_trait,
     const_mut_refs,
+    const_trait_impl,
     custom_test_frameworks,
     exclusive_range_pattern,
     impl_trait_projections,
@@ -14,6 +15,7 @@
 
 pub mod panic;
 pub mod stepper;
+pub mod time;
 pub mod uart;
 pub mod ui;
 
