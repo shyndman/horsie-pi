@@ -163,7 +163,7 @@ async fn configure_stepper_drivers(uart2: Uart<'static, esp32s3_hal::peripherals
 
     let mut vactual = VACTUAL::default();
 
-    let mut ramp_generator = RampGenerator::new(1.8, 256, 192);
+    let mut ramp_generator = RampGenerator::new(1.8, 256, 8);
     ramp_generator.set_target_speed(360*32);
     loop {
         let new_vactual = ramp_generator.next().await;

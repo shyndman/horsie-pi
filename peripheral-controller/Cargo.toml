@@ -12,6 +12,18 @@ forced-target = "xtensa-esp32s3-none-elf"
 critical-section = "1.1.2"
 defmt = {version = "0.3.5"}
 defmt-macros = {version = "0.3.5"}
+display-interface = {git = "https://github.com/therealprof/display-interface/", rev = "7a8d3c4374dee567a8d86dfc4a884211ae1aee2f", package = "display-interface", version = "0.5.0-alpha.1", features = [
+  "async",
+  "nightly",
+]}
+display-interface-i2c = {git = "https://github.com/therealprof/display-interface/", rev = "7a8d3c4374dee567a8d86dfc4a884211ae1aee2f", package = "display-interface-i2c", version = "0.5.0-alpha.1", features = [
+  "async",
+  "nightly",
+]}
+display-interface-spi = {git = "https://github.com/therealprof/display-interface/", rev = "7a8d3c4374dee567a8d86dfc4a884211ae1aee2f", package = "display-interface-spi", version = "0.5.0-alpha.1", features = [
+  "async",
+  "nightly",
+]}
 embassy-embedded-hal = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-embedded-hal", rev = "b6fc682117a41e8e63a9632e06da5a17f46d9ab0", default-features = false, features = [
   "defmt",
   "nightly",
@@ -20,6 +32,8 @@ embassy-embedded-hal = {version = "0.1.0", git = "https://github.com/embassy-rs/
 embassy-executor = {version = "0.3.0", features = ["nightly"]}
 embassy-sync = "0.3.0"
 embassy-time = {version = "0.1.5", features = ["unstable-traits"]}
+embedded-graphics = {version = "0.8.1", features = ["defmt"]}
+embedded-graphics-core = {version = "0.4.0", features = ["defmt"]}
 embedded-hal = {package = "embedded-hal", version = "0.2.7"}
 embedded-hal_1 = {package = "embedded-hal", version = "1.0.0-rc.1"}
 embedded-hal-async = "1.0.0-rc.1"
@@ -70,6 +84,7 @@ heapless = {version = "0.7.14", default-features = false}
 log = {version = "0.4.18"}
 micromath = "2.0.0"
 paste = "1.0.14"
+profont = "0.7.0"
 rgb = {version = "0.8.36"}
 smart-leds = {version = "0.3.0"}
 smart-leds-trait = "0.2.1"
@@ -84,6 +99,9 @@ smoltcp = {version = "0.10.0", default-features = false, features = [
   "socket-tcp",
   "socket-udp",
 ]}
+ssd1306 = {path = "/home/shyndman/dev/rust-embedded-drivers/ssd1306", features = [
+  "graphics",
+]} #{version = "0.8.3", features = ["graphics"]}
 static_cell = {version = "1.2.0", features = ["nightly"]}
 tmc2209 = "0.2.2"
 usb-device = {version = "0.2.9", features = ["defmt"]}

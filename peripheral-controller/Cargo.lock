@@ -36,6 +36,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
+name = "async-trait"
+version = "0.1.74"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a66537f1bb974b254c98ed142ff995236e81b9d0fe4db0575f46612cb15eb0f9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.38",
+]
+
+[[package]]
 name = "atomic-polyfill"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -64,6 +75,12 @@ name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
+
+[[package]]
+name = "az"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b7e4c2464d97fe331d41de9d5db0def0a96f4d823b8b32a2efd503578988973"
 
 [[package]]
 name = "bare-metal"
@@ -131,6 +148,12 @@ dependencies = [
  "quote",
  "syn 1.0.109",
 ]
+
+[[package]]
+name = "byte-slice-cast"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3ac9f8b63eca6fd385229b3675f6cc0dc5c8a5c8a54a59d4f52ffd670d87b0c"
 
 [[package]]
 name = "bytemuck"
@@ -246,6 +269,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "display-interface"
+version = "0.5.0-alpha.1"
+source = "git+https://github.com/therealprof/display-interface/?rev=7a8d3c4374dee567a8d86dfc4a884211ae1aee2f#7a8d3c4374dee567a8d86dfc4a884211ae1aee2f"
+dependencies = [
+ "async-trait",
+]
+
+[[package]]
+name = "display-interface-i2c"
+version = "0.5.0-alpha.1"
+source = "git+https://github.com/therealprof/display-interface/?rev=7a8d3c4374dee567a8d86dfc4a884211ae1aee2f#7a8d3c4374dee567a8d86dfc4a884211ae1aee2f"
+dependencies = [
+ "async-trait",
+ "display-interface",
+ "embedded-hal 1.0.0-rc.1",
+ "embedded-hal-async",
+]
+
+[[package]]
+name = "display-interface-spi"
+version = "0.5.0-alpha.1"
+source = "git+https://github.com/therealprof/display-interface/?rev=7a8d3c4374dee567a8d86dfc4a884211ae1aee2f#7a8d3c4374dee567a8d86dfc4a884211ae1aee2f"
+dependencies = [
+ "async-trait",
+ "byte-slice-cast",
+ "display-interface",
+ "embedded-hal 1.0.0-rc.1",
+ "embedded-hal-async",
+]
+
+[[package]]
 name = "drv2605l"
 version = "0.1.0"
 source = "git+https://github.com/shyndman/drv2605l-rs?rev=59b844612889a49f552c63855000e0487e29cb80#59b844612889a49f552c63855000e0487e29cb80"
@@ -351,6 +405,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "994f7e5b5cb23521c22304927195f236813053eb9c065dd2226a32ba64695446"
 dependencies = [
  "stable_deref_trait",
+]
+
+[[package]]
+name = "embedded-graphics"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0649998afacf6d575d126d83e68b78c0ab0e00ca2ac7e9b3db11b4cbe8274ef0"
+dependencies = [
+ "az",
+ "byteorder",
+ "defmt",
+ "embedded-graphics-core",
+ "float-cmp",
+ "micromath",
+]
+
+[[package]]
+name = "embedded-graphics-core"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba9ecd261f991856250d2207f6d8376946cd9f412a2165d3b75bc87a0bc7a044"
+dependencies = [
+ "az",
+ "byteorder",
+ "defmt",
 ]
 
 [[package]]
@@ -610,6 +689,15 @@ checksum = "46303f565772937ffe1d394a4fac6f411c6013172fadde9dcdb1e147a086940e"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
+]
+
+[[package]]
+name = "float-cmp"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]
@@ -873,6 +961,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1bcece43b12349917e096cddfa66107277f123e6c96a5aea78711dc601a47152"
 
 [[package]]
+name = "num-traits"
+version = "0.2.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39e3200413f237f41ab11ad6d161bc7239c84dcb631773ccd7de3dfe4b5c267c"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "object"
 version = "0.32.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -904,11 +1001,16 @@ dependencies = [
  "critical-section",
  "defmt",
  "defmt-macros",
+ "display-interface",
+ "display-interface-i2c",
+ "display-interface-spi",
  "drv2605l",
  "embassy-embedded-hal",
  "embassy-executor",
  "embassy-sync",
  "embassy-time",
+ "embedded-graphics",
+ "embedded-graphics-core",
  "embedded-hal 0.2.7",
  "embedded-hal 1.0.0-rc.1",
  "embedded-hal-async",
@@ -929,10 +1031,12 @@ dependencies = [
  "log",
  "micromath",
  "paste",
+ "profont",
  "rgb",
  "smart-leds",
  "smart-leds-trait",
  "smoltcp",
+ "ssd1306",
  "static_cell",
  "tmc2209",
  "usb-device",
@@ -1002,6 +1106,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "134c189feb4956b20f6f547d2cf727d4c0fe06722b20a0eec87ed445a97f92da"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "profont"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "016681370a9dd6e7ddb4c1a959922fd59dc45e5ebaa5ff5b13090267898ced34"
+dependencies = [
+ "embedded-graphics",
 ]
 
 [[package]]
@@ -1153,6 +1266,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
 dependencies = [
  "lock_api",
+]
+
+[[package]]
+name = "ssd1306"
+version = "0.8.4"
+dependencies = [
+ "display-interface",
+ "display-interface-i2c",
+ "display-interface-spi",
+ "embedded-graphics-core",
+ "embedded-hal 0.2.7",
+ "embedded-hal 1.0.0-rc.1",
+ "embedded-hal-async",
 ]
 
 [[package]]

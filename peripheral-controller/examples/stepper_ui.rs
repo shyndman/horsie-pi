@@ -22,10 +22,11 @@ use adafruit_seesaw_async::{
     SeesawDevice, SeesawDeviceInit,
 };
 use defmt::Debug2Format;
-use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Timer};
+use embedded_graphics::primitives::PrimitiveStyleBuilder;
+use embedded_graphics_core::pixelcolor::BinaryColor;
 use embedded_hal_async::digital::Wait;
 use esp32s3_hal::{
     self as hal, clock::ClockControl, embassy, interrupt, peripherals::Peripherals,
@@ -44,6 +45,12 @@ use peripheral_controller::{
 use rgb::RGB8;
 use smart_leds::brightness;
 use smart_leds_trait::SmartLedsWrite;
+use ssd1306::{
+    prelude::{Brightness, DisplayConfig},
+    rotation::DisplayRotation,
+    size::DisplaySize128x64,
+    I2CDisplayInterface, Ssd1306,
+};
 use static_cell::make_static;
 
 #[main]
@@ -69,8 +76,6 @@ async fn main(spawner: Spawner) {
         interrupt::Priority::Priority1,
     )
     .unwrap();
-
-    Timer::after(Duration::from_secs(1)).await;
 
     {
         io.pins.gpio17.into_push_pull_output().set_high().unwrap();
@@ -106,6 +111,10 @@ async fn main(spawner: Spawner) {
             DualModeI2cDevice::new(i2c0_bus),
             io.pins.gpio7,
         ))
+        .unwrap();
+
+    spawner
+        .spawn(render_display(DualModeI2cDevice::new(i2c0_bus)))
         .unwrap();
 
     loop {
@@ -144,4 +153,25 @@ async fn capture_input(
         rotary_encoder.consume_interrupt_state().await.unwrap();
         rotary_encoder.reset_interrupts().await.unwrap();
     }
+}
+
+#[embassy_executor::task]
+async fn render_display(display_link: PeripheralI2cLink<hal::peripherals::I2C0>) {
+    defmt::info!("Initializing display device");
+
+    let mut bigger_display = Ssd1306::new(
+        I2CDisplayInterface::new_alternate_address(display_link),
+        DisplaySize128x64,
+        DisplayRotation::Rotate90,
+    )
+    .into_buffered_graphics_mode();
+    bigger_display.init().unwrap();
+    bigger_display
+        .set_brightness(Brightness::BRIGHTEST)
+        .unwrap();
+
+    let primitive_style = PrimitiveStyleBuilder::new()
+        .stroke_width(2)
+        .stroke_color(BinaryColor::On)
+        .build();
 }

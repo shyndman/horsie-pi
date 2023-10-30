@@ -15,6 +15,7 @@
 
 pub mod panic;
 pub mod peripherals;
+pub mod shared_bus;
 pub mod stepper;
 pub mod time;
 pub mod uart;

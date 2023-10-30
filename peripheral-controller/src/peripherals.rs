@@ -4,8 +4,7 @@ use esp32s3_hal as hal;
 use esp_hal_common as hal_common;
 use hal_common::prelude::_fugit_RateExtU32;
 
-pub type PeripheralI2cLink<I2CP> =
-    I2cDevice<'static, CriticalSectionRawMutex, hal::i2c::I2C<'static, I2CP>>;
+use crate::shared_bus::DualModeI2cDevice;
 
 pub fn new_i2c<
     I2CP: esp_hal_common::i2c::Instance,
@@ -28,3 +27,6 @@ pub fn new_i2c<
 
     i2c
 }
+
+pub type PeripheralI2cLink<I2CP> =
+    DualModeI2cDevice<'static, CriticalSectionRawMutex, hal::i2c::I2C<'static, I2CP>>;
