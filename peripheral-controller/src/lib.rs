@@ -18,6 +18,7 @@ pub mod stepper;
 pub mod time;
 pub mod uart;
 pub mod ui;
+pub mod user_input;
 
 use core::mem::MaybeUninit;
 
