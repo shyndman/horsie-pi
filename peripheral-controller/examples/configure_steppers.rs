@@ -39,6 +39,7 @@ use peripheral_controller::{
     init_heap,
     stepper::{
         motor_constants::NEMA8_S20STH30_0604A_CONSTANTS,
+        ramp_generator::RampGenerator,
         tune::tune_driver,
         uart::{Tmc2209UartConnection, UART_BAUD_RATE},
     },
@@ -161,6 +162,17 @@ async fn configure_stepper_drivers(uart2: Uart<'static, esp32s3_hal::peripherals
     defmt::info!("TSTEP is {}", tstep.0);
 
     let mut vactual = VACTUAL::default();
-    vactual.0 = 4000;
-    pan_driver.write_register(vactual).await.unwrap();
+
+    let mut ramp_generator = RampGenerator::new(1.8, 256, 192);
+    ramp_generator.set_target_speed(360*32);
+    loop {
+        let new_vactual = ramp_generator.next().await;
+        if new_vactual != vactual.get() {
+            vactual.set(new_vactual);
+            pan_driver.write_register(vactual).await.unwrap();
+        } else {
+            Timer::after(Duration::from_secs(4)).await;
+            ramp_generator.set_target_speed(0);
+        }
+    }
 }
