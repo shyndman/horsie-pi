@@ -11,7 +11,7 @@
       "type": "cortex-debug",
       "request": "attach", // attach instead of launch, because otherwise flash write is attempted, but fails
       "cwd": "${workspaceRoot}",
-      "executable": "target/xtensa-esp32s3-none-elf/debug/peripheral-controller", //
+      "executable": "target/xtensa-esp32s3-none-elf/debug/examples/rotary_input", //
       "servertype": "openocd",
       "interface": "jtag",
       "svdFile": "${userHome}/dev/rust-embedded-drivers/esp-pacs/esp32s3/svd/esp32s3.base.svd",

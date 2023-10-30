@@ -3,6 +3,18 @@
 version = 3
 
 [[package]]
+name = "adafruit-seesaw"
+version = "0.5.2"
+source = "git+https://github.com/shyndman/adafruit-seesaw?rev=c437799d6556bfcb2eb132be8785892e6aedfcb0#c437799d6556bfcb2eb132be8785892e6aedfcb0"
+dependencies = [
+ "defmt",
+ "embassy-sync",
+ "embedded-hal 0.2.7",
+ "embedded-hal 1.0.0-rc.1",
+ "embedded-hal-async",
+]
+
+[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -887,6 +899,7 @@ checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
 name = "peripheral-controller"
 version = "0.1.0"
 dependencies = [
+ "adafruit-seesaw",
  "bh1750-ehal",
  "critical-section",
  "defmt",
@@ -915,6 +928,7 @@ dependencies = [
  "hp-embedded-drivers",
  "log",
  "micromath",
+ "paste",
  "rgb",
  "smart-leds",
  "smart-leds-trait",
