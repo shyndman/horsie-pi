@@ -19,8 +19,10 @@ pub async fn tune_driver<M: RawMutex, P: esp_hal_common::uart::Instance>(
         TMC2209_VSENSE_OHMS,
         motor_constants.run_current_milliamps(),
     );
+    let ihold = (irun - 8).max(0);
+    defmt::info!("Setting IRUN={}, IHOLD={}", irun, ihold);
     ihold_irun.set_irun(irun);
-    ihold_irun.set_ihold((irun - 8).max(0));
+    ihold_irun.set_ihold(ihold);
     driver.write_register(ihold_irun).await.unwrap();
 
     let mut chopconf = tmc2209::reg::CHOPCONF::default();
