@@ -14,6 +14,7 @@
 #![test_runner(run_tests)]
 
 pub mod panic;
+pub mod peripherals;
 pub mod stepper;
 pub mod time;
 pub mod uart;
