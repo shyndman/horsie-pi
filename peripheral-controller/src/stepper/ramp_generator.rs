@@ -38,7 +38,7 @@ impl RampGenerator {
     /// Waits until it's time to apply the next speed change, then returns that speed as
     /// a `VACTUAL` that can be written directly to the stepper driver's register.
     ///
-    pub async fn next(&mut self) -> i32 {
+    pub async fn next(&mut self) -> (i32, i32) {
         if let Some(ref mut ticker) = self.ticker {
             let remaining = self.target_speed - self.current_speed;
             let direction = remaining.signum();
@@ -56,7 +56,7 @@ impl RampGenerator {
             }
         }
 
-        self.to_vactual(self.current_speed)
+        (self.current_speed, self.to_vactual(self.current_speed))
     }
 
     fn to_vactual(&self, val: i32) -> i32 {

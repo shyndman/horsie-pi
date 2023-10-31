@@ -19,24 +19,15 @@ use embassy_executor::Spawner;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Instant, Timer};
 use esp32s3_hal::{
-    self,
-    clock::ClockControl,
-    embassy, interrupt,
-    peripherals::{Interrupt, Peripherals},
-    prelude::*,
-    system::SystemParts,
-    uart, Rmt, Uart, IO,
-};
-use esp_hal_common::{
-    clock::Clocks,
-    gpio::{InputPin, OutputPin},
-    peripheral::Peripheral,
+    self, clock::ClockControl, embassy, peripherals::Peripherals, prelude::*,
+    system::SystemParts, Rmt, Uart, IO,
 };
 use esp_hal_procmacros::main;
 use esp_hal_smartled::{smartLedAdapter, SmartLedsAdapter};
 use esp_println::logger::init_logger_from_env;
 use peripheral_controller::{
     init_heap,
+    peripherals::new_uart_bus,
     stepper::{
         motor_constants::NEMA8_S20STH30_0604A_CONSTANTS,
         ramp_generator::RampGenerator,
@@ -88,6 +79,7 @@ async fn main(spawner: Spawner) {
         peripherals.UART2,
         io.pins.gpio21.into_push_pull_output(),
         io.pins.gpio5.into_floating_input(),
+        UART_BAUD_RATE,
         &clocks,
     );
 
@@ -96,44 +88,6 @@ async fn main(spawner: Spawner) {
     loop {
         Timer::after(Duration::from_secs(30)).await;
     }
-}
-
-fn new_uart_bus<P: esp_hal_common::uart::Instance, TX: OutputPin, RX: InputPin>(
-    peripheral: impl Peripheral<P = P> + 'static,
-    tx_pin: impl Peripheral<P = TX>,
-    rx_pin: impl Peripheral<P = RX>,
-    clocks: &Clocks,
-) -> Uart<'static, P> {
-    let uart = Uart::new_with_config(
-        peripheral,
-        uart::config::Config {
-            baudrate: UART_BAUD_RATE,
-            ..uart::config::Config::default()
-        },
-        Some(uart::TxRxPins::new_tx_rx(tx_pin, rx_pin)),
-        clocks,
-    );
-    let reg = P::register_block();
-    reg.conf0.modify(|_, w| {
-        w.rxfifo_rst().set_bit();
-        w
-    });
-    reg.conf0.modify(|_, w| {
-        w.rxfifo_rst().clear_bit();
-        w
-    });
-    reg.conf0.modify(|_, w| {
-        w.txfifo_rst().set_bit();
-        w
-    });
-    reg.conf0.modify(|_, w| {
-        w.txfifo_rst().clear_bit();
-        w
-    });
-    interrupt::enable(Interrupt::UART0, interrupt::Priority::Priority1).unwrap();
-    interrupt::enable(Interrupt::UART1, interrupt::Priority::Priority1).unwrap();
-    interrupt::enable(Interrupt::UART2, interrupt::Priority::Priority1).unwrap();
-    uart
 }
 
 #[embassy_executor::task]
@@ -164,9 +118,9 @@ async fn configure_stepper_drivers(uart2: Uart<'static, esp32s3_hal::peripherals
     let mut vactual = VACTUAL::default();
 
     let mut ramp_generator = RampGenerator::new(1.8, 256, 8);
-    ramp_generator.set_target_speed(360*32);
+    ramp_generator.set_target_speed(360 * 32);
     loop {
-        let new_vactual = ramp_generator.next().await;
+        let (_new_velocity, new_vactual) = ramp_generator.next().await;
         if new_vactual != vactual.get() {
             vactual.set(new_vactual);
             pan_driver.write_register(vactual).await.unwrap();
