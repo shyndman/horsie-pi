@@ -9,6 +9,7 @@ edition = "2021"
 forced-target = "xtensa-esp32s3-none-elf"
 
 [dependencies]
+async-trait = "0.1.74"
 critical-section = "1.1.2"
 defmt = {version = "0.3.5"}
 defmt-macros = {version = "0.3.5"}
@@ -85,6 +86,10 @@ log = {version = "0.4.18"}
 micromath = "2.0.0"
 paste = "1.0.14"
 profont = "0.7.0"
+rand = {version = "0.8.5", default-features = false, features = [
+  "nightly",
+  "small_rng",
+]}
 rgb = {version = "0.8.36"}
 smart-leds = {version = "0.3.0"}
 smart-leds-trait = "0.2.1"
@@ -99,9 +104,6 @@ smoltcp = {version = "0.10.0", default-features = false, features = [
   "socket-tcp",
   "socket-udp",
 ]}
-ssd1306 = {path = "/home/shyndman/dev/rust-embedded-drivers/ssd1306", features = [
-  "graphics",
-]} #{version = "0.8.3", features = ["graphics"]}
 static_cell = {version = "1.2.0", features = ["nightly"]}
 tmc2209 = "0.2.2"
 usb-device = {version = "0.2.9", features = ["defmt"]}
@@ -110,10 +112,13 @@ usbd-serial = "0.1.1"
 # Forked drivers
 adafruit-seesaw-async = {git = "https://github.com/shyndman/adafruit-seesaw", rev = "c437799d6556bfcb2eb132be8785892e6aedfcb0", package = "adafruit-seesaw"}
 bh1750_async = {git = "https://github.com/shyndman/bh1750", rev = "743bfbee36582494ba028960b3600491a6bdc4f7", package = "bh1750-ehal"}
-vl6180x_async = {git = "https://github.com/shyndman/vl6180x", rev = "b44d0024e25b70de931e6a2bcf6acd515585c323", package = "vl6180x", features = [
+drv2605l_async = {git = "https://github.com/shyndman/drv2605l-rs", rev = "59b844612889a49f552c63855000e0487e29cb80", package = "drv2605l", features = [
   "defmt",
 ]}
-drv2605l_async = {git = "https://github.com/shyndman/drv2605l-rs", rev = "59b844612889a49f552c63855000e0487e29cb80", package = "drv2605l", features = [
+ssd1306 = {git = "https://github.com/shyndman/ssd1306", rev = "8f759d33cea6540552cae3c84846d8bc65dd517d", features = [
+  "graphics",
+]}
+vl6180x_async = {git = "https://github.com/shyndman/vl6180x", rev = "b44d0024e25b70de931e6a2bcf6acd515585c323", package = "vl6180x", features = [
   "defmt",
 ]}
 

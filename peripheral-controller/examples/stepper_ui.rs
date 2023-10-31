@@ -15,6 +15,7 @@
 
 extern crate alloc;
 
+use alloc::format;
 use core::cell::RefCell;
 
 use adafruit_seesaw_async::{
@@ -24,9 +25,12 @@ use adafruit_seesaw_async::{
 use defmt::Debug2Format;
 use embassy_executor::Spawner;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
-use embassy_time::{Duration, Timer};
-use embedded_graphics::primitives::PrimitiveStyleBuilder;
-use embedded_graphics_core::pixelcolor::BinaryColor;
+use embassy_time::{Duration, Ticker, Timer};
+use embedded_graphics::{
+    mono_font::MonoTextStyleBuilder,
+    text::{Baseline, Text},
+};
+use embedded_graphics_core::{pixelcolor::BinaryColor, prelude::Point, Drawable};
 use embedded_hal_async::digital::Wait;
 use esp32s3_hal::{
     self as hal, clock::ClockControl, embassy, interrupt, peripherals::Peripherals,
@@ -42,6 +46,8 @@ use peripheral_controller::{
     shared_bus::DualModeI2cDevice,
     user_input::ano_rotary_encoder::AnoRotaryEncoder,
 };
+use profont::PROFONT_12_POINT;
+use rand::{rngs::SmallRng, RngCore, SeedableRng};
 use rgb::RGB8;
 use smart_leds::brightness;
 use smart_leds_trait::SmartLedsWrite;
@@ -162,16 +168,38 @@ async fn render_display(display_link: PeripheralI2cLink<hal::peripherals::I2C0>)
     let mut bigger_display = Ssd1306::new(
         I2CDisplayInterface::new_alternate_address(display_link),
         DisplaySize128x64,
-        DisplayRotation::Rotate90,
+        DisplayRotation::Rotate0,
     )
     .into_buffered_graphics_mode();
-    bigger_display.init().unwrap();
+    bigger_display.init().await.unwrap();
     bigger_display
         .set_brightness(Brightness::BRIGHTEST)
+        .await
         .unwrap();
 
-    let primitive_style = PrimitiveStyleBuilder::new()
-        .stroke_width(2)
-        .stroke_color(BinaryColor::On)
+    let data_text_style = MonoTextStyleBuilder::new()
+        .font(&PROFONT_12_POINT)
+        .text_color(BinaryColor::On)
         .build();
+
+    let mut rng = SmallRng::seed_from_u64(0xdeadbeef);
+
+    let mut ticker = Ticker::every(Duration::from_hz(4));
+    loop {
+        bigger_display.clear_buffer();
+
+        let usteps = rng.next_u32() / 40_000 + 1000;
+
+        Text::with_baseline(
+            &format!("{usteps}µHz"),
+            Point::new(0, 13),
+            data_text_style,
+            Baseline::Top,
+        )
+        .draw(&mut bigger_display)
+        .unwrap();
+
+        bigger_display.flush().await.unwrap();
+        ticker.next().await;
+    }
 }

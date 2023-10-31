@@ -997,6 +997,7 @@ name = "peripheral-controller"
 version = "0.1.0"
 dependencies = [
  "adafruit-seesaw",
+ "async-trait",
  "bh1750-ehal",
  "critical-section",
  "defmt",
@@ -1032,6 +1033,7 @@ dependencies = [
  "micromath",
  "paste",
  "profont",
+ "rand",
  "rgb",
  "smart-leds",
  "smart-leds-trait",
@@ -1131,6 +1133,21 @@ name = "r0"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd7a31eed1591dcbc95d92ad7161908e72f4677f8fabf2a32ca49b4237cbf211"
+
+[[package]]
+name = "rand"
+version = "0.8.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
+dependencies = [
+ "rand_core",
+]
+
+[[package]]
+name = "rand_core"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 
 [[package]]
 name = "regex"
@@ -1271,7 +1288,9 @@ dependencies = [
 [[package]]
 name = "ssd1306"
 version = "0.8.4"
+source = "git+https://github.com/shyndman/ssd1306?rev=8f759d33cea6540552cae3c84846d8bc65dd517d#8f759d33cea6540552cae3c84846d8bc65dd517d"
 dependencies = [
+ "async-trait",
  "display-interface",
  "display-interface-i2c",
  "display-interface-spi",

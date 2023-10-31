@@ -22,7 +22,6 @@ use adafruit_seesaw_async::{
     SeesawDevice, SeesawDeviceInit,
 };
 use defmt::Debug2Format;
-use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Timer};

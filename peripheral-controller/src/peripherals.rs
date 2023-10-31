@@ -1,4 +1,3 @@
-use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use esp32s3_hal as hal;
 use esp_hal_common as hal_common;
