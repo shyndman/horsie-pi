@@ -1,10 +1,12 @@
 stl_path = "stl/"
 step_path = "step/"
 
+# https://cad.onshape.com/documents/59af235d377100de3c6b7bce/w/4f5fd2d6a5e977222aa25f3c/e/2136dc3f65019907116cfcef
+
 [document]
-id = "931b9cd9becb99b51d848110"
-workspace_id = "7c4104c68ccc35c024281cf7"
+id = "59af235d377100de3c6b7bce"
+workspace_id = "4f5fd2d6a5e977222aa25f3c"
 
 [[part_studio]]
-display_name = "Strain relief"
-id = "d6621987a102acbf57865b71"
+display_name = "Breadboard prints"
+id = "2136dc3f65019907116cfcef"
