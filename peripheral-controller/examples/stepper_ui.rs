@@ -60,7 +60,7 @@ use peripheral_controller::{
         uart::{Tmc2209UartConnection, UART_BAUD_RATE},
     },
     uart::bus::UartDevice,
-    user_input::ano_rotary_encoder::AnoRotaryEncoder,
+    ui::input::ano_rotary_encoder::AnoRotaryEncoder,
 };
 use profont::PROFONT_14_POINT;
 use rgb::RGB8;

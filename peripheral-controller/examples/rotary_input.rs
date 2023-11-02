@@ -38,7 +38,7 @@ use peripheral_controller::{
     init_heap,
     peripherals::{new_i2c, PeripheralI2cLink},
     shared_bus::DualModeI2cDevice,
-    user_input::ano_rotary_encoder::AnoRotaryEncoder,
+    ui::input::ano_rotary_encoder::AnoRotaryEncoder,
 };
 use rgb::RGB8;
 use smart_leds::brightness;
