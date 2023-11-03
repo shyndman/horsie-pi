@@ -387,9 +387,11 @@ async fn render_display(
         DisplayRotation::Rotate0,
     )
     .into_buffered_graphics_mode();
+
     display.init().await.unwrap();
     display.set_brightness(Brightness::BRIGHTEST).await.unwrap();
     display.clear_buffer();
+    display.flush().await.unwrap();
 
     let data_text_style = MonoTextStyleBuilder::new()
         .font(&PROFONT_10_POINT)
