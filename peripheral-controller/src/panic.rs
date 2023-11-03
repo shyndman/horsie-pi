@@ -35,7 +35,7 @@ pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
         }
     }
 
-    halt();
+    loop {}
 }
 
 // Ensure that the address is in DRAM and that it is 16-byte aligned.
@@ -55,27 +55,6 @@ pub fn is_valid_ram_address(address: u32) -> bool {
     }
 
     true
-}
-
-fn halt() -> ! {
-    mod registers {
-        pub(crate) const SW_CPU_STALL: u32 = 0x600080bc;
-        pub(crate) const OPTIONS0: u32 = 0x60008000;
-    }
-
-    let sw_cpu_stall = registers::SW_CPU_STALL as *mut u32;
-    let options0 = registers::OPTIONS0 as *mut u32;
-
-    unsafe {
-        sw_cpu_stall.write_volatile(
-            sw_cpu_stall.read_volatile() & !(0b111111 << 20) & !(0b111111 << 26) |
-                (0x21 << 20) |
-                (0x21 << 26),
-        );
-        options0.write_volatile(options0.read_volatile() & !(0b1111) | 0b1010);
-    }
-
-    loop {}
 }
 
 #[doc(hidden)]
