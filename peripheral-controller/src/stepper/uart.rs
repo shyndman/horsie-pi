@@ -1,47 +1,50 @@
 use core::fmt::Debug;
 
+use anyhow::{bail, Result};
 use defmt::Debug2Format;
 use embassy_sync::blocking_mutex::raw::RawMutex;
+use esp_hal_common::uart;
 
+use super::error::ErrorKind;
 use crate::uart::bus::UartDevice;
 
 pub const UART_BAUD_RATE: u32 = 230400;
 
 /// Represents the connection to a TMC2209's UART interface
-pub struct Tmc2209UartConnection<
-    M: RawMutex + 'static,
-    P: 'static + esp_hal_common::uart::Instance,
-> {
+pub struct Tmc2209UartConnection<M: RawMutex + 'static, P: 'static + uart::Instance> {
     uart_device: UartDevice<'static, M, P>,
     uart_address: u8,
     change_count: u32,
 }
 
-impl<M: RawMutex, P: 'static + esp_hal_common::uart::Instance> Tmc2209UartConnection<M, P> {
+impl<M: RawMutex, P: 'static + uart::Instance> Tmc2209UartConnection<M, P> {
     pub async fn connect(
         uart_device: UartDevice<'static, M, P>,
         uart_address: u8,
-    ) -> Result<Self, ()> {
-        defmt::info!("Connecting to TMC2209 @UART{}", uart_address);
+    ) -> Result<Self, ErrorKind> {
+        defmt::debug!("Connecting to TMC2209 @UART{}", uart_address);
 
         let mut connection = Tmc2209UartConnection {
             uart_device,
             uart_address,
             change_count: 0,
         };
-        connection.initialize().await?;
+        connection
+            .initialize()
+            .await
+            .map_err(|_| ErrorKind::ConnectionFailed)?;
         Ok(connection)
     }
 
     /// Initializes the state of the connection
-    async fn initialize(&mut self) -> Result<(), ()> {
+    async fn initialize(&mut self) -> Result<()> {
         self.change_count = self.read_register::<tmc2209::reg::IFCNT>().await?.0;
         Ok(())
     }
 
     pub async fn read_register<R: tmc2209::reg::Register + From<u32>>(
         &mut self,
-    ) -> Result<R, ()> {
+    ) -> Result<R> {
         let register_address = R::ADDRESS;
         defmt::trace!(
             "Writing read request to {:?}@{}",
@@ -61,8 +64,8 @@ impl<M: RawMutex, P: 'static + esp_hal_common::uart::Instance> Tmc2209UartConnec
         let req = tmc2209::ReadRequest::from_addr(self.uart_address, register_address);
         defmt::trace!("read request bytes: {}", req.bytes());
         if let Err(e) = self.uart_device.write_all(req.bytes()).await {
-            defmt::error!("{:?}", Debug2Format(&e));
-            return Err(());
+            defmt::error!("{}", e);
+            bail!(ErrorKind::UartGeneral(e))
         }
 
         let mut buffer: [u8; tmc2209::ReadRequest::LEN_BYTES +
@@ -73,8 +76,8 @@ impl<M: RawMutex, P: 'static + esp_hal_common::uart::Instance> Tmc2209UartConnec
                 defmt::trace!("bytes read\n {}", buffer);
             }
             Err(e) => {
-                defmt::error!("{}", Debug2Format(&e));
-                panic!();
+                defmt::error!("{}", e);
+                bail!(ErrorKind::UartReadExact(e));
             }
         }
 
@@ -90,18 +93,18 @@ impl<M: RawMutex, P: 'static + esp_hal_common::uart::Instance> Tmc2209UartConnec
                 (bytes, _) => {
                     defmt::error!("no response: {} bytes read", bytes);
                     defmt::error!("{}", &buffer);
-                    return Err(());
+                    bail!(ErrorKind::MissingResponse)
                 }
             }
             .into(),
         ))
     }
 
-    pub async fn write_register<R>(&mut self, register: R) -> Result<u32, ()>
+    pub async fn write_register<R>(&mut self, register: R) -> Result<u32>
     where
         R: tmc2209::reg::WritableRegister + Debug,
     {
-        defmt::info!("Write register {:?}", defmt::Debug2Format(&register));
+        defmt::debug!("Write register {:?}", defmt::Debug2Format(&register));
 
         // Size the read buffer to hold the echo'd request and the response
         const READ_BUFFER_LENGTH: usize = tmc2209::WriteRequest::LEN_BYTES;
@@ -114,8 +117,8 @@ impl<M: RawMutex, P: 'static + esp_hal_common::uart::Instance> Tmc2209UartConnec
         let req = tmc2209::WriteRequest::new(self.uart_address, register);
         defmt::trace!("write request: {}", req.bytes());
         if let Err(e) = self.uart_device.write_all(req.bytes()).await {
-            defmt::error!("{:?}", Debug2Format(&e));
-            return Err(());
+            defmt::error!("{}", e);
+            bail!(ErrorKind::UartGeneral(e));
         }
 
         // Clear the echo
@@ -125,7 +128,7 @@ impl<M: RawMutex, P: 'static + esp_hal_common::uart::Instance> Tmc2209UartConnec
         match self.uart_device.read_exact(&mut buffer).await {
             Ok(_) => defmt::trace!("echo received\n{}", buffer),
             Err(e) => {
-                defmt::error!("{}", Debug2Format(&e));
+                defmt::error!("{}", e);
                 panic!();
             }
         }
@@ -143,7 +146,7 @@ impl<M: RawMutex, P: 'static + esp_hal_common::uart::Instance> Tmc2209UartConnec
                 prev_change_count,
                 new_change_count
             );
-            Err(())
+            bail!(ErrorKind::WriteFailed)
         }
     }
 }

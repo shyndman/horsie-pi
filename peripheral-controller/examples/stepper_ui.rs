@@ -108,7 +108,7 @@ async fn main(spawner: Spawner) {
             io.pins.gpio18.into_push_pull_output(),
         );
         led.write(brightness(
-            core::iter::once(RGB8::new(0x33, 0x66, 0x00)),
+            core::iter::once(RGB8::new(0x33, 0x66, 0xff)),
             90,
         ))
         .unwrap();
@@ -344,10 +344,12 @@ async fn drive_steppers(
     let mut pan_driver = Tmc2209UartConnection::connect(UartDevice::new(uart2_bus), 0x00)
         .await
         .unwrap();
-    tune_driver(&mut pan_driver, NEMA8_S20STH30_0604A_CONSTANTS).await;
+    tune_driver(&mut pan_driver, NEMA8_S20STH30_0604A_CONSTANTS)
+        .await
+        .unwrap();
 
     let mut vactual = VACTUAL::default();
-    let mut ramp_generator = RampGenerator::new(1.8, 256, 32);
+    let mut ramp_generator = RampGenerator::new(1.8, 256, 192);
     let mut command_sub = velocity_command_channel.subscriber().unwrap();
     let state_pub = velocity_state_channel.publisher().unwrap();
 

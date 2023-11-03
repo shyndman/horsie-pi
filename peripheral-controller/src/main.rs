@@ -255,7 +255,9 @@ async fn configure_stepper_drivers(uart2: Uart<'static, esp32s3_hal::peripherals
     // let mut tilt_driver = Tmc2209UartConnection::connect(&mut uart2, 0x01).await;
 
     defmt::info!("Tuning pan driver");
-    tune_driver(&mut pan_driver, NEMA11_11HS18_0674S_CONSTANTS).await;
+    tune_driver(&mut pan_driver, NEMA11_11HS18_0674S_CONSTANTS)
+        .await
+        .unwrap();
     defmt::info!("Tuned!");
 
     // tune_driver(&mut tilt_driver, NEMA8_S20STH30_0604A_CONSTANTS, &mut uart2).await;

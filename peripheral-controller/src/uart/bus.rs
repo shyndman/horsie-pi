@@ -1,9 +1,10 @@
 use core::fmt::Debug;
 
+use anyhow::Result;
 use embassy_sync::{blocking_mutex::raw::RawMutex, mutex::Mutex};
 use embedded_io::ReadExactError;
 use embedded_io_async::{Read, Write};
-use esp_hal_common::Uart;
+use esp_hal_common::{uart, Uart};
 
 /// Error returned by I2C device implementations in this crate.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -16,13 +17,11 @@ pub enum UartDeviceError<BUS> {
 }
 
 /// UART device on a shared bus.
-pub struct UartDevice<'a, M: 'static + RawMutex, P: 'static + esp_hal_common::uart::Instance>
-{
+pub struct UartDevice<'a, M: 'static + RawMutex, P: 'static + uart::Instance> {
     bus: &'a Mutex<M, Uart<'static, P>>,
 }
 
-impl<'a, M: RawMutex, P: 'static + esp_hal_common::uart::Instance> UartDevice<'a, M, P> {
-    /// Create a new `UartDevice`.
+impl<'a, M: RawMutex, P: 'static + uart::Instance> UartDevice<'a, M, P> {
     pub fn new(bus: &'a Mutex<M, Uart<'static, P>>) -> Self {
         Self { bus }
     }
@@ -30,12 +29,12 @@ impl<'a, M: RawMutex, P: 'static + esp_hal_common::uart::Instance> UartDevice<'a
     pub async fn read_exact(
         &mut self,
         buf: &mut [u8],
-    ) -> Result<(), ReadExactError<esp32s3_hal::uart::Error>> {
+    ) -> Result<(), ReadExactError<uart::Error>> {
         let mut bus = self.bus.lock().await;
         bus.read_exact(buf).await
     }
 
-    pub async fn write_all(&mut self, buf: &[u8]) -> Result<(), esp32s3_hal::uart::Error> {
+    pub async fn write_all(&mut self, buf: &[u8]) -> Result<(), uart::Error> {
         let mut bus = self.bus.lock().await;
         bus.write_all(buf).await
     }

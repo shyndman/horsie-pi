@@ -997,6 +997,7 @@ name = "peripheral-controller"
 version = "0.1.0"
 dependencies = [
  "adafruit-seesaw",
+ "anyhow",
  "async-trait",
  "bh1750-ehal",
  "critical-section",

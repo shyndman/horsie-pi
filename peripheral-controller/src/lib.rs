@@ -7,9 +7,11 @@
     const_mut_refs,
     const_trait_impl,
     custom_test_frameworks,
+    error_in_core,
     exclusive_range_pattern,
     impl_trait_projections,
     return_position_impl_trait_in_trait,
+    try_blocks,
     type_alias_impl_trait,
 )]
 #![test_runner(run_tests)]

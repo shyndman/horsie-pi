@@ -9,6 +9,7 @@ edition = "2021"
 forced-target = "xtensa-esp32s3-none-elf"
 
 [dependencies]
+anyhow = { version = "1.0", default-features = false }
 async-trait = "0.1.74"
 critical-section = "1.1.2"
 defmt = {version = "0.3.5"}

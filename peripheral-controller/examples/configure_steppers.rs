@@ -107,7 +107,9 @@ async fn configure_stepper_drivers(uart2: Uart<'static, esp32s3_hal::peripherals
 
     defmt::info!("Tuning pan driver");
     let start_ts = Instant::now();
-    tune_driver(&mut pan_driver, NEMA8_S20STH30_0604A_CONSTANTS).await;
+    tune_driver(&mut pan_driver, NEMA8_S20STH30_0604A_CONSTANTS)
+        .await
+        .unwrap();
     defmt::info!("Tuned in {}ms", (Instant::now() - start_ts).as_millis());
     let tstep = pan_driver
         .read_register::<tmc2209::reg::TSTEP>()
