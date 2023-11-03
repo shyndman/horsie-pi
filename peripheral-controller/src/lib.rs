@@ -2,6 +2,7 @@
 #![no_main]
 #![feature(
     asm_experimental_arch,
+    async_closure,
     async_fn_in_trait,
     const_mut_refs,
     const_trait_impl,
@@ -9,7 +10,7 @@
     exclusive_range_pattern,
     impl_trait_projections,
     return_position_impl_trait_in_trait,
-    type_alias_impl_trait
+    type_alias_impl_trait,
 )]
 #![test_runner(run_tests)]
 

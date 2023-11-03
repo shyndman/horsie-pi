@@ -43,7 +43,7 @@ impl<M: RawMutex, P: 'static + esp_hal_common::uart::Instance> Tmc2209UartConnec
         &mut self,
     ) -> Result<R, ()> {
         let register_address = R::ADDRESS;
-        defmt::debug!(
+        defmt::trace!(
             "Writing read request to {:?}@{}",
             defmt::Debug2Format(&register_address),
             self.uart_address
@@ -84,7 +84,7 @@ impl<M: RawMutex, P: 'static + esp_hal_common::uart::Instance> Tmc2209UartConnec
             match reader.read_response(&buffer[tmc2209::ReadRequest::LEN_BYTES..12]) {
                 (_, Some(res)) => {
                     let state = res.reg_state().unwrap();
-                    defmt::debug!("response {:?}", Debug2Format(&state));
+                    defmt::trace!("response {:?}", Debug2Format(&state));
                     state
                 }
                 (bytes, _) => {

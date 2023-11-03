@@ -19,23 +19,25 @@ use alloc::format;
 use core::cell::RefCell;
 
 use adafruit_seesaw_async::{
-    prelude::{EncoderModule, GpioModule},
-    SeesawDevice, SeesawDeviceInit,
+    prelude::EncoderModule, SeesawDevice, SeesawDeviceInit, SeesawDriver,
 };
 use defmt::Debug2Format;
 use defmt_macros::Format;
 use embassy_executor::Spawner;
 use embassy_sync::{
-    blocking_mutex::raw::CriticalSectionRawMutex,
+    blocking_mutex::raw::{CriticalSectionRawMutex, RawMutex},
     mutex::Mutex,
     pubsub::{PubSubChannel, WaitResult},
 };
-use embassy_time::Instant;
+use embassy_time::{Delay, Instant};
 use embedded_graphics::{
     mono_font::MonoTextStyleBuilder,
+    primitives::{Primitive, PrimitiveStyleBuilder},
     text::{Baseline, Text},
 };
-use embedded_graphics_core::{pixelcolor::BinaryColor, prelude::Point, Drawable};
+use embedded_graphics_core::{
+    pixelcolor::BinaryColor, prelude::Point, primitives::Rectangle, Drawable,
+};
 use embedded_hal_async::digital::Wait;
 use esp32s3_hal::{
     self as hal, clock::ClockControl, embassy, interrupt, peripherals::Peripherals,
@@ -62,7 +64,7 @@ use peripheral_controller::{
     uart::bus::UartDevice,
     ui::input::ano_rotary_encoder::AnoRotaryEncoder,
 };
-use profont::PROFONT_14_POINT;
+use profont::PROFONT_10_POINT;
 use rgb::RGB8;
 use smart_leds::brightness;
 use smart_leds_trait::SmartLedsWrite;
@@ -183,7 +185,7 @@ async fn capture_input(
     let rotary_encoder = AnoRotaryEncoder::new_with_default_addr(
         adafruit_seesaw_async::SeesawDriver::new(encoder_link, embassy_time::Delay),
     );
-    let mut rotary_encoder = match rotary_encoder.init().await {
+    let rotary_encoder = match rotary_encoder.init().await {
         Ok(encoder) => {
             defmt::info!("Rotary encoder initialized");
             encoder
@@ -193,32 +195,138 @@ async fn capture_input(
             panic!("nooo!");
         }
     };
+    let interrupt_pin = interrupt_pin.into_floating_input();
 
     let command_pub = velocity_command_channel.publisher().unwrap();
-    let mut last_position: i32 = 0;
-    let mut interrupt_pin = interrupt_pin.into_floating_input();
+
+    let input_events = construct_input_event_stream(rotary_encoder, interrupt_pin).await;
+    pin_mut!(input_events);
+
+    let mut current_target = 0;
     loop {
-        interrupt_pin.wait_for_low().await.ok();
+        let event = match input_events.next().await {
+            Some(e) => e,
+            None => break,
+        };
 
-        let press_states = rotary_encoder.button_states().await.unwrap();
-        let position = rotary_encoder.position().await.unwrap();
+        match event {
+            InputEvent::RotaryPositionChange { delta, .. } => {
+                current_target += -1 * delta * 10;
+            }
+            InputEvent::SelectReleased => {
+                defmt::info!("Zeroing velocity");
+                current_target = 0;
+            }
+            InputEvent::LeftReleased => {
+                defmt::info!("Reducing by 100");
+                current_target += 100;
+            }
+            InputEvent::RightReleased => {
+                defmt::info!("Increasing by 100");
+                current_target -= 100;
+            }
 
-        rotary_encoder.consume_interrupt_state().await.unwrap();
-        rotary_encoder.reset_interrupts().await.unwrap();
-
-        defmt::debug!("Position: {}, Buttons: {}", position, press_states);
-        if last_position != position {
-            let target_velocity = -1 * position * 10;
-            defmt::info!(
-                "Rotary change: Setting target velocity to {}°/s",
-                target_velocity
-            );
-            command_pub.publish_immediate(VelocityMsg {
-                degrees_per_second: target_velocity,
-            });
-            last_position = position;
+            _ => {}
         }
+
+        defmt::info!(
+            "Rotary change: Setting target velocity to {}°/s",
+            current_target
+        );
+        command_pub.publish_immediate(VelocityMsg {
+            degrees_per_second: current_target,
+        });
     }
+}
+
+#[allow(unused)]
+enum InputEvent {
+    RotaryPositionChange { position: i32, delta: i32 },
+    SelectPressed,
+    SelectReleased,
+    UpPressed,
+    UpReleased,
+    RightPressed,
+    RightReleased,
+    DownPressed,
+    DownReleased,
+    LeftPressed,
+    LeftReleased,
+}
+
+async fn construct_input_event_stream(
+    mut enc: AnoRotaryEncoder<
+        SeesawDriver<
+            DualModeI2cDevice<
+                'static,
+                CriticalSectionRawMutex,
+                esp_hal_common::i2c::I2C<'_, esp_hal_common::peripherals::I2C0>,
+            >,
+            Delay,
+        >,
+    >,
+    interrupt_pin: impl Wait,
+) -> impl Stream<Item = InputEvent> {
+    let position = enc.position().await.unwrap();
+    let buttons = enc.button_states().await.unwrap();
+
+    stream::unfold(
+        (enc, interrupt_pin, position, buttons),
+        |(mut enc, mut interrupt_pin, last_position, last_buttons)| async move {
+            interrupt_pin.wait_for_low().await.ok();
+
+            let position = enc.position().await.unwrap();
+            let buttons = enc.button_states().await.unwrap();
+
+            let mut events = alloc::vec![];
+
+            if position != last_position {
+                let delta = position - last_position;
+                events.push(InputEvent::RotaryPositionChange { position, delta });
+            }
+            if buttons.select_pressed != last_buttons.select_pressed {
+                events.push(if buttons.select_pressed {
+                    InputEvent::SelectPressed
+                } else {
+                    InputEvent::SelectReleased
+                });
+            }
+            if buttons.up_pressed != last_buttons.up_pressed {
+                events.push(if buttons.up_pressed {
+                    InputEvent::UpPressed
+                } else {
+                    InputEvent::UpReleased
+                });
+            }
+            if buttons.right_pressed != last_buttons.right_pressed {
+                events.push(if buttons.right_pressed {
+                    InputEvent::RightPressed
+                } else {
+                    InputEvent::RightReleased
+                });
+            }
+            if buttons.down_pressed != last_buttons.down_pressed {
+                events.push(if buttons.down_pressed {
+                    InputEvent::DownPressed
+                } else {
+                    InputEvent::DownReleased
+                });
+            }
+            if buttons.left_pressed != last_buttons.left_pressed {
+                events.push(if buttons.left_pressed {
+                    InputEvent::LeftPressed
+                } else {
+                    InputEvent::LeftReleased
+                });
+            }
+
+            Some((
+                stream::iter(events),
+                (enc, interrupt_pin, position, buttons),
+            ))
+        },
+    )
+    .flatten()
 }
 
 #[embassy_executor::task]
@@ -239,7 +347,7 @@ async fn drive_steppers(
     tune_driver(&mut pan_driver, NEMA8_S20STH30_0604A_CONSTANTS).await;
 
     let mut vactual = VACTUAL::default();
-    let mut ramp_generator = RampGenerator::new(1.8, 256, 8);
+    let mut ramp_generator = RampGenerator::new(1.8, 256, 32);
     let mut command_sub = velocity_command_channel.subscriber().unwrap();
     let state_pub = velocity_state_channel.publisher().unwrap();
 
@@ -257,6 +365,7 @@ async fn drive_steppers(
                     defmt::warn!("Stepper task missed {} velocity commands", missed_count);
                 }
                 WaitResult::Message(VelocityMsg { degrees_per_second }) => {
+                    defmt::info!("Target velocity: {}", degrees_per_second);
                     ramp_generator.set_target_speed(degrees_per_second);
                 }
             }
@@ -280,55 +389,98 @@ async fn render_display(
     .into_buffered_graphics_mode();
     display.init().await.unwrap();
     display.set_brightness(Brightness::BRIGHTEST).await.unwrap();
+    display.clear_buffer();
 
     let data_text_style = MonoTextStyleBuilder::new()
-        .font(&PROFONT_14_POINT)
+        .font(&PROFONT_10_POINT)
         .text_color(BinaryColor::On)
         .build();
+    let clear_style = PrimitiveStyleBuilder::new()
+        .fill_color(BinaryColor::Off)
+        .stroke_width(0)
+        .build();
 
-    let mut target_velocity: i32 = 0;
-    let mut current_velocity: i32 = 0;
-    let mut command_sub = velocity_command_channel.subscriber().unwrap();
-    let mut state_sub = velocity_state_channel.subscriber().unwrap();
+    let char_h = data_text_style.font.character_size.height as i32;
+    let display_w = display.dimensions().0 as i32;
+
+    // Construct a stream of "events" that we know how to render
+    let events =
+        construct_display_event_stream(velocity_command_channel, velocity_state_channel);
+    pin_mut!(events);
+
     loop {
-        display.clear_buffer();
+        let event = match events.next().await {
+            Some(e) => e,
+            None => break,
+        };
 
+        let ((x0, y0), (x1, y1), label) = match event {
+            DisplayEvent::CurrentVelocity { degrees_per_second } => {
+                let y = 0;
+                (
+                    (0, y),
+                    (display_w, y + char_h),
+                    format!("C: {}°/s", -degrees_per_second),
+                )
+            }
+            DisplayEvent::TargetVelocity { degrees_per_second } => {
+                let y = char_h + 1;
+                (
+                    (0, y),
+                    (display_w, y + char_h),
+                    format!("T: {}°/s", -degrees_per_second),
+                )
+            }
+        };
+
+        // Clear region
         let ts = Instant::now();
-        Text::with_baseline(
-            &format!("C: {current_velocity}°/s"),
-            Point::new(0, 0),
-            data_text_style,
-            Baseline::Top,
-        )
-        .draw(&mut display)
-        .unwrap();
-
-        Text::with_baseline(
-            &format!("T: {target_velocity}°/s"),
-            Point::new(0, data_text_style.font.character_size.height as i32 + 2),
-            data_text_style,
-            Baseline::Top,
-        )
-        .draw(&mut display)
-        .unwrap();
-        defmt::debug!("Text::draw() in {}ms", (Instant::now() - ts).as_millis());
-
-        let ts = Instant::now();
+        Rectangle::with_corners(Point::new(x0, y0), Point::new(x1, y1))
+            .into_styled(clear_style)
+            .draw(&mut display)
+            .unwrap();
+        // Draw text
+        Text::with_baseline(&label, Point::new(x0, y0), data_text_style, Baseline::Top)
+            .draw(&mut display)
+            .unwrap();
+        // Flush screen (note this will only flush the modified region)
         display.flush().await.unwrap();
-        defmt::debug!("display.flush() in {}ms", (Instant::now() - ts).as_millis());
-
-        let command_future = command_sub.next_message_pure();
-        let state_future = state_sub.next_message_pure();
-        pin_mut!(command_future);
-        pin_mut!(state_future);
-
-        match future::select(command_future, state_future).await {
-            future::Either::Left((VelocityMsg { degrees_per_second }, _)) => {
-                target_velocity = -1 * degrees_per_second
-            }
-            future::Either::Right((VelocityMsg { degrees_per_second }, _)) => {
-                current_velocity = -1 * degrees_per_second
-            }
-        }
+        defmt::info!("Render complete in {}ms", (Instant::now() - ts).as_millis());
     }
+}
+
+enum DisplayEvent {
+    TargetVelocity { degrees_per_second: i32 },
+    CurrentVelocity { degrees_per_second: i32 },
+}
+
+fn construct_display_event_stream(
+    velocity_command_channel: &'static VelocityCommandChannel,
+    velocity_state_channel: &'static VelocityStateChannel,
+) -> impl Stream<Item = DisplayEvent> {
+    let command_sub_stream =
+        channel_to_stream(velocity_command_channel).map(|v| DisplayEvent::TargetVelocity {
+            degrees_per_second: v.degrees_per_second,
+        });
+    let state_sub_stream =
+        channel_to_stream(velocity_state_channel).map(|v| DisplayEvent::CurrentVelocity {
+            degrees_per_second: v.degrees_per_second,
+        });
+
+    futures::stream::select(command_sub_stream, state_sub_stream)
+}
+
+pub fn channel_to_stream<
+    M: RawMutex,
+    T: Clone,
+    const CAP: usize,
+    const SUBS: usize,
+    const PUBS: usize,
+>(
+    channel: &'static PubSubChannel<M, T, CAP, SUBS, PUBS>,
+) -> impl Stream<Item = T> {
+    stream::unfold(channel.subscriber().unwrap(), |mut sub| async {
+        // TODO(shyndman): Maybe add optional logging on lagged streams?
+        Some((sub.next_message_pure().await, sub))
+    })
 }
