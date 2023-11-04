@@ -34,15 +34,14 @@ impl<D: Driver> AnoRotaryEncoder<D> {
 
     pub async fn button_states(&mut self) -> Result<ButtonStates, SeesawError<D::Error>> {
         let pressed_bits = self.digital_read_bulk().await?;
-        // I've decided on a different orientation than is suggested by default. My
-        // alignment coincides with the orientation of the writing on the Adafruit Seesaw
-        // PCB.
+        // I've decided on a different orientation than is suggested by default. In this
+        // orientation, the board's pins are at 12 o'clock.
         Ok(ButtonStates {
             select_pressed: (pressed_bits & 0b000010) == 0,
-            up_pressed: (pressed_bits & 0b000100) == 0,
-            right_pressed: (pressed_bits & 0b100000) == 0,
-            down_pressed: (pressed_bits & 0b010000) == 0,
-            left_pressed: (pressed_bits & 0b001000) == 0,
+            down_pressed: (pressed_bits & 0b000100) == 0,
+            right_pressed: (pressed_bits & 0b001000) == 0,
+            up_pressed: (pressed_bits & 0b010000) == 0,
+            left_pressed: (pressed_bits & 0b100000) == 0,
         })
     }
 

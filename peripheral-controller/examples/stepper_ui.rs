@@ -384,7 +384,7 @@ async fn render_display(
     defmt::info!("Initializing display device");
 
     let mut display = Ssd1306::new(
-        I2CDisplayInterface::new_alternate_address(display_link),
+        I2CDisplayInterface::new(display_link),
         DisplaySize128x64,
         DisplayRotation::Rotate0,
     )
