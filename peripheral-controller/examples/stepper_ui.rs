@@ -15,7 +15,7 @@
 
 extern crate alloc;
 
-use alloc::format;
+use alloc::{format, vec};
 use core::cell::RefCell;
 
 use adafruit_seesaw_async::{
@@ -44,7 +44,7 @@ use esp32s3_hal::{
     prelude::*, system::SystemParts, Rmt, IO,
 };
 use esp_hal_common::{
-    gpio::{Gpio7, Unknown},
+    gpio::{AnyPin, Floating, Gpio4, Gpio7, Input, Unknown},
     Uart,
 };
 use esp_hal_procmacros::main;
@@ -160,6 +160,13 @@ async fn main(spawner: Spawner) {
         .unwrap();
 
     spawner
+        .spawn(watch_step_pin(
+            velocity_state_channel,
+            io.pins.gpio4.into_floating_input().degrade(),
+        ))
+        .unwrap();
+
+    spawner
         .spawn(render_display(
             velocity_command_channel,
             velocity_state_channel,
@@ -168,8 +175,62 @@ async fn main(spawner: Spawner) {
         .unwrap();
 }
 
+enum WatchStepPinEvent {
+    DirectionChange { signum: i16 },
+    StepPulse,
+}
+
+#[embassy_executor::task]
+async fn watch_step_pin(
+    velocity_state_channel: &'static VelocityStateChannel,
+    step_pin: AnyPin<Input<Floating>>,
+) {
+    let mut last_sign = 0;
+    let direction_stream = channel_to_stream(velocity_state_channel)
+        .flat_map(move |x| {
+            let velocity = x.degrees_per_second;
+            let sign = velocity.signum();
+            if last_sign != sign {
+                last_sign = sign;
+                stream::iter(vec![sign as i16])
+            } else {
+                stream::iter(vec![])
+            }
+        })
+        .map(|signum| WatchStepPinEvent::DirectionChange { signum });
+
+    let step_pulse_stream = stream::unfold(step_pin, |mut pin| async {
+        pin.wait_for_rising_edge().await.unwrap();
+        Some((WatchStepPinEvent::StepPulse, pin))
+    });
+
+    let mut step_count: i16 = 0;
+    let mut direction: i16 = 1;
+
+    let events = stream::select(direction_stream, step_pulse_stream);
+    pin_mut!(events);
+    loop {
+        let event = match events.next().await {
+            Some(e) => e,
+            None => break,
+        };
+
+        match event {
+            WatchStepPinEvent::DirectionChange { signum } => {
+                direction = signum;
+                defmt::debug!("Direction change: {}", direction)
+            }
+            WatchStepPinEvent::StepPulse => {
+                step_count += 4 * direction;
+                step_count %= 200;
+                defmt::debug!("Step count: {}", step_count)
+            }
+        }
+    }
+}
+
 type VelocityCommandChannel = PubSubChannel<CriticalSectionRawMutex, VelocityMsg, 3, 10, 3>;
-type VelocityStateChannel = VelocityCommandChannel;
+type VelocityStateChannel = PubSubChannel<CriticalSectionRawMutex, VelocityMsg, 4, 10, 3>;
 #[derive(Clone, Format)]
 struct VelocityMsg {
     degrees_per_second: i32,
