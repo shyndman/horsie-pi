@@ -14,25 +14,12 @@ async-trait = "0.1.74"
 critical-section = "1.1.2"
 defmt = {version = "0.3.5"}
 defmt-macros = {version = "0.3.5"}
-display-interface = {git = "https://github.com/therealprof/display-interface/", rev = "7a8d3c4374dee567a8d86dfc4a884211ae1aee2f", package = "display-interface", version = "0.5.0-alpha.1", features = [
-  "async",
-  "nightly",
-]}
-display-interface-i2c = {git = "https://github.com/therealprof/display-interface/", rev = "7a8d3c4374dee567a8d86dfc4a884211ae1aee2f", package = "display-interface-i2c", version = "0.5.0-alpha.1", features = [
-  "async",
-  "nightly",
-]}
-display-interface-spi = {git = "https://github.com/therealprof/display-interface/", rev = "7a8d3c4374dee567a8d86dfc4a884211ae1aee2f", package = "display-interface-spi", version = "0.5.0-alpha.1", features = [
-  "async",
-  "nightly",
-]}
-embassy-embedded-hal = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-embedded-hal", rev = "b6fc682117a41e8e63a9632e06da5a17f46d9ab0", default-features = false, features = [
-  "defmt",
-  "nightly",
-  "time",
-]}
-embassy-executor = {version = "0.3.0", features = ["nightly"]}
-embassy-sync = "0.3.0"
+display-interface = {git = "https://github.com/therealprof/display-interface/", rev = "7a8d3c4374dee567a8d86dfc4a884211ae1aee2f", package = "display-interface", version = "0.5.0-alpha.1", features = [ "async", "nightly", ]}
+display-interface-i2c = {git = "https://github.com/therealprof/display-interface/", rev = "7a8d3c4374dee567a8d86dfc4a884211ae1aee2f", package = "display-interface-i2c", version = "0.5.0-alpha.1", features = [ "async", "nightly", ]}
+display-interface-spi = {git = "https://github.com/therealprof/display-interface/", rev = "7a8d3c4374dee567a8d86dfc4a884211ae1aee2f", package = "display-interface-spi", version = "0.5.0-alpha.1", features = [ "async", "nightly", ]}
+embassy-embedded-hal = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-embedded-hal", rev = "18c1f9dd562682f928aa3c1fc44c013a374ee280", default-features = false, features = [ "defmt", "nightly", "time", ]}
+embassy-executor = {version = "0.3.2", features = ["nightly"]}
+embassy-sync = "0.4.0"
 embassy-time = {version = "0.1.5", features = ["unstable-traits"]}
 embedded-graphics = {version = "0.8.1", features = ["defmt"]}
 embedded-graphics-core = {version = "0.4.0", features = ["defmt"]}
@@ -43,72 +30,28 @@ embedded-io = "0.6.1"
 embedded-io-async = "0.6.0"
 embedded-svc = {version = "0.26.1", default-features = false, features = []}
 esp-alloc = {version = "0.3.0"}
-esp-backtrace = {version = "0.8.0", features = [
-  "esp32s3",
-  "exception-handler",
-  # "panic-handler",
-  "print-jtag-serial",
-]}
-esp-hal-procmacros = {git = "https://github.com/esp-rs/esp-hal", rev = "29ebd170eee686e61683ae704d7e9b4a834040a0", package = "esp-hal-procmacros", features = [
-  "embassy",
-  "esp32s3",
-]}
-esp-hal-smartled = {git = "https://github.com/esp-rs/esp-hal", rev = "29ebd170eee686e61683ae704d7e9b4a834040a0", package = "esp-hal-smartled", features = [
-  "esp32s3",
-  "defmt",
-]}
-esp-println = {version = "0.6.0", default-features = false, features = [
-  "defmt",
-  "esp32s3",
-  "jtag_serial",
-  "log",
-]}
+esp-backtrace = {version = "0.9", features = [ "esp32s3", "exception-handler", "panic-handler", "print-jtag-serial", ]}
+esp-hal-procmacros = {git = "https://github.com/esp-rs/esp-hal", rev = "957b232413cdf71c863534cbdd5da06783ee4d5d", package = "esp-hal-procmacros", features = [ "embassy", "esp32s3", ]}
+esp-hal-smartled = {git = "https://github.com/esp-rs/esp-hal", rev = "957b232413cdf71c863534cbdd5da06783ee4d5d", package = "esp-hal-smartled", features = [ "esp32s3", "defmt", ]}
+esp-println = {version = "0.7", default-features = false, features = [ "defmt", "esp32s3", "jtag_serial", "log", ]}
 esp32s3 = {version = "0.22.0", features = ["impl-register-debug", "rt"]}
-esp32s3-hal = {git = "https://github.com/esp-rs/esp-hal", rev = "29ebd170eee686e61683ae704d7e9b4a834040a0", package = "esp32s3-hal", features = [
-  "async",
-  "defmt",
-  "eh1",
-  "embassy",
-  "embassy-executor-thread",
-  "embassy-time-systick",
-  "rt",
-]}
-esp-hal-common = {git = "https://github.com/esp-rs/esp-hal", rev = "29ebd170eee686e61683ae704d7e9b4a834040a0", package = "esp-hal-common", features = [
-  "async",
-  "defmt",
-  "eh1",
-  "embassy",
-  "embassy-executor-thread",
-  "embassy-time-systick",
-]}
+esp32s3-hal = {git = "https://github.com/esp-rs/esp-hal", rev = "957b232413cdf71c863534cbdd5da06783ee4d5d", package = "esp32s3-hal", features = [ "async", "defmt", "eh1", "embassy", "embassy-executor-thread", "embassy-time-systick", "rt", ]}
+esp-hal-common = {git = "https://github.com/esp-rs/esp-hal", rev = "957b232413cdf71c863534cbdd5da06783ee4d5d", package = "esp-hal-common", features = [ "async", "defmt", "eh1", "embassy", "embassy-executor-thread", "embassy-time-systick", ]}
 futures = {version = "0.3.28", default-features = false, features = ["alloc"]}
-heapless = {version = "0.7.14", default-features = false}
+heapless = {version = "0.8.0", default-features = false}
 log = {version = "0.4.18"}
 micromath = "2.0.0"
 paste = "1.0.14"
 profont = "0.7.0"
-rand = {version = "0.8.5", default-features = false, features = [
-  "nightly",
-  "small_rng",
-]}
+rand = {version = "0.8.5", default-features = false, features = [ "nightly", "small_rng", ]}
 rgb = {version = "0.8.36"}
 smart-leds = {version = "0.3.0"}
 smart-leds-trait = "0.2.1"
-smoltcp = {version = "0.10.0", default-features = false, features = [
-  "medium-ethernet",
-  "proto-dhcpv4",
-  "proto-igmp",
-  "proto-ipv4",
-  "socket-dhcpv4",
-  "socket-icmp",
-  "socket-raw",
-  "socket-tcp",
-  "socket-udp",
-]}
-static_cell = {version = "1.2.0", features = ["nightly"]}
+smoltcp = {version = "0.10.0", default-features = false, features = [ "medium-ethernet", "proto-dhcpv4", "proto-igmp", "proto-ipv4", "socket-dhcpv4", "socket-icmp", "socket-raw", "socket-tcp", "socket-udp", ]}
+static_cell = {version = "2.0.0", features = ["nightly"]}
 tmc2209 = "0.2.2"
-usb-device = {version = "0.2.9", features = ["defmt"]}
-usbd-serial = "0.1.1"
+# usb-device = {version = "0.2.9", features = ["defmt"]}
+# usbd-serial = "0.1.1"
 
 # Forked drivers
 adafruit-seesaw-async = {git = "https://github.com/shyndman/adafruit-seesaw", rev = "c437799d6556bfcb2eb132be8785892e6aedfcb0", package = "adafruit-seesaw"}
@@ -127,16 +70,9 @@ vl6180x_async = {git = "https://github.com/shyndman/vl6180x", rev = "b44d0024e25
 hp-embedded-drivers = {path = "../embedded-drivers"}
 
 [patch.crates-io]
-embassy-sync = {version = "0.3.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-sync", rev = "b6fc682117a41e8e63a9632e06da5a17f46d9ab0"}
-embassy-time = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-time", rev = "b6fc682117a41e8e63a9632e06da5a17f46d9ab0", features = [
-  "defmt",
-  "defmt-timestamp-uptime",
-  "nightly",
-  "unstable-traits",
-]}
-embassy-futures = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-futures", rev = "b6fc682117a41e8e63a9632e06da5a17f46d9ab0", features = [
-  "features",
-]}
+embassy-sync = {version = "0.4.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-sync", rev = "18c1f9dd562682f928aa3c1fc44c013a374ee280"}
+embassy-time = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-time", rev = "18c1f9dd562682f928aa3c1fc44c013a374ee280"}
+embassy-futures = {version = "0.1.0", git = "https://github.com/embassy-rs/embassy", package = "embassy-futures", rev = "18c1f9dd562682f928aa3c1fc44c013a374ee280"}
 
 # [patch."https://github.com/esp-rs/esp-hal"]
 # esp32s3-hal = {path = "/home/shyndman/dev/rust-embedded-drivers/esp-hal/esp32s3-hal"}

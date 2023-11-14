@@ -86,8 +86,8 @@ async fn main(spawner: Spawner) {
 
     let i2c0 = new_i2c(
         peripherals.I2C0,
-        io.pins.gpio8.into_floating_input(),
-        io.pins.gpio9.into_floating_input(),
+        io.pins.gpio8,
+        io.pins.gpio9,
         &clocks,
     );
     let i2c0_bus: &'static mut Mutex<

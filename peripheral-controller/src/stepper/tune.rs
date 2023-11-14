@@ -55,7 +55,8 @@ pub async fn tune_driver<M: RawMutex, P: esp_hal_common::uart::Instance>(
 
         // Stallguard
         let mut tpwnthrs = tmc2209::reg::TPWMTHRS::default();
-        tpwnthrs.set(0xfffff); // This keeps the stepper in SpreadCycle mode
+        // tpwnthrs.set(0xfffff); // This keeps the stepper in SpreadCycle mode
+        tpwnthrs.set(0); // This keeps the stepper in SpreadCycle mode
         driver.write_register(tpwnthrs).await?;
 
         // Coolstep
@@ -67,6 +68,19 @@ pub async fn tune_driver<M: RawMutex, P: esp_hal_common::uart::Instance>(
         sgthrs.0 = 10;
         driver.write_register(sgthrs).await?;
 
+        // StealthChop configuration
+        let mut pwmconf = tmc2209::reg::PWMCONF::default();
+        pwmconf.set_pwm_autoscale(true);
+        pwmconf.set_pwm_autograd(true);
+        pwmconf.set_pwm_freq(0b10);
+        pwmconf.set_pwm_grad(motor_constants.pwm_gradient(None, None) as u8);
+        pwmconf.set_pwm_ofs(motor_constants.pwm_output_frequency(None) as u8);
+        pwmconf.set_pwm_grad(2);
+        // pwmconf.set_pwm_ofs(62);
+        // pwmconf.set_pwm_reg(15);
+        pwmconf.set_pwm_lim(4);
+        driver.write_register(pwmconf).await.unwrap();
+
         let mut coolconf = tmc2209::reg::COOLCONF::default();
         coolconf.set_semin(SEMIN);
         coolconf.set_semax(SEMAX);
@@ -76,6 +90,7 @@ pub async fn tune_driver<M: RawMutex, P: esp_hal_common::uart::Instance>(
         driver.write_register(coolconf).await?;
 
         gconf.set_en_spread_cycle(true); // SpreadCycle
+        // gconf.set_en_spread_cycle(false); // SpreadCycle
         gconf.set_i_scale_analog(false);
         gconf.set_multistep_filt(true);
         gconf.set_mstep_reg_select(true); // Set microsteps via registers

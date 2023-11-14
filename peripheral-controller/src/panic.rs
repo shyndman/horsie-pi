@@ -38,6 +38,28 @@ pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     loop {}
 }
 
+#[no_mangle]
+#[link_section = ".rwtext"]
+unsafe fn __user_exception(cause: ExceptionCause, context: Context) {
+    use esp_println::println;
+
+    println!("\n\nException occured '{:?}'", cause);
+    println!("{:?}", context);
+
+    let backtrace = backtrace_internal(context.A1, 0);
+    for e in backtrace {
+        if let Some(addr) = e {
+            println!("0x{:x}", addr);
+        }
+    }
+
+    println!("");
+    println!("");
+    println!("");
+
+    loop {}
+}
+
 // Ensure that the address is in DRAM and that it is 16-byte aligned.
 //
 // Based loosely on the `esp_stack_ptr_in_dram` function from

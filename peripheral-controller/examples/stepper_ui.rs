@@ -44,7 +44,7 @@ use esp32s3_hal::{
     prelude::*, system::SystemParts, Rmt, IO,
 };
 use esp_hal_common::{
-    gpio::{AnyPin, Floating, Gpio4, Gpio7, Input, Unknown},
+    gpio::{AnyPin, Floating, Gpio7, Input, Unknown},
     Uart,
 };
 use esp_hal_procmacros::main;
@@ -56,7 +56,7 @@ use peripheral_controller::{
     peripherals::{new_i2c, new_uart_bus, PeripheralI2cLink},
     shared_bus::DualModeI2cDevice,
     stepper::{
-        motor_constants::NEMA8_S20STH30_0604A_CONSTANTS,
+        motor_constants::NEMA11_11HS18_0674S_CONSTANTS,
         ramp_generator::RampGenerator,
         tune::tune_driver,
         uart::{Tmc2209UartConnection, UART_BAUD_RATE},
@@ -114,12 +114,7 @@ async fn main(spawner: Spawner) {
         .unwrap();
     }
 
-    let i2c0 = new_i2c(
-        peripherals.I2C0,
-        io.pins.gpio8.into_floating_input(),
-        io.pins.gpio9.into_floating_input(),
-        &clocks,
-    );
+    let i2c0 = new_i2c(peripherals.I2C0, io.pins.gpio8, io.pins.gpio9, &clocks);
     let i2c0_bus: &'static mut Mutex<
         CriticalSectionRawMutex,
         RefCell<esp_hal_common::i2c::I2C<'static, esp_hal_common::peripherals::I2C0>>,
@@ -405,7 +400,7 @@ async fn drive_steppers(
     let mut pan_driver = Tmc2209UartConnection::connect(UartDevice::new(uart2_bus), 0x00)
         .await
         .unwrap();
-    tune_driver(&mut pan_driver, NEMA8_S20STH30_0604A_CONSTANTS)
+    tune_driver(&mut pan_driver, NEMA11_11HS18_0674S_CONSTANTS)
         .await
         .unwrap();
 
