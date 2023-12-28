@@ -56,7 +56,7 @@ use peripheral_controller::{
     peripherals::{new_i2c, new_uart_bus, PeripheralI2cLink},
     shared_bus::DualModeI2cDevice,
     stepper::{
-        motor_constants::NEMA11_11HS18_0674S_CONSTANTS,
+        motor_constants::{NEMA8_8HY2001_10_CONSTANTS, NEMA8_S20STH30_0604A_CONSTANTS},
         ramp_generator::RampGenerator,
         tune::tune_driver,
         uart::{Tmc2209UartConnection, UART_BAUD_RATE},
@@ -154,12 +154,12 @@ async fn main(spawner: Spawner) {
         ))
         .unwrap();
 
-    spawner
-        .spawn(watch_step_pin(
-            velocity_state_channel,
-            io.pins.gpio4.into_floating_input().degrade(),
-        ))
-        .unwrap();
+    // spawner
+    //     .spawn(watch_step_pin(
+    //         velocity_state_channel,
+    //         io.pins.gpio4.into_floating_input().degrade(),
+    //     ))
+    //     .unwrap();
 
     spawner
         .spawn(render_display(
@@ -400,7 +400,15 @@ async fn drive_steppers(
     let mut pan_driver = Tmc2209UartConnection::connect(UartDevice::new(uart2_bus), 0x00)
         .await
         .unwrap();
-    tune_driver(&mut pan_driver, NEMA11_11HS18_0674S_CONSTANTS)
+    tune_driver(&mut pan_driver, NEMA8_S20STH30_0604A_CONSTANTS)
+        .await
+        .unwrap();
+
+    // Connect to the pan stepper driver, and tune it for its attached motor
+    let mut tilt_driver = Tmc2209UartConnection::connect(UartDevice::new(uart2_bus), 0x01)
+        .await
+        .unwrap();
+    tune_driver(&mut tilt_driver, NEMA8_8HY2001_10_CONSTANTS)
         .await
         .unwrap();
 
@@ -414,6 +422,7 @@ async fn drive_steppers(
         if new_vactual != vactual.get() {
             vactual.set(new_vactual);
             pan_driver.write_register(vactual).await.unwrap();
+            tilt_driver.write_register(vactual).await.unwrap();
             state_pub.publish_immediate(VelocityMsg {
                 degrees_per_second: new_velocity,
             })

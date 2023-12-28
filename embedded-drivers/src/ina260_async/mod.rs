@@ -112,8 +112,8 @@ where
         Ok(self
             .read_register::<AlertLimitRegister>()
             .await?
-            .alert_limit as f32
-            * 1.25)
+            .alert_limit as f32 *
+            1.25)
     }
     pub async fn set_alert_limit(&mut self, limit: f32) -> Result<(), Error<E>> {
         self.update_register::<AlertLimitRegister>(|mut reg| {
@@ -144,7 +144,10 @@ where
             .await?
             .alert_polarity)
     }
-    pub async fn set_alert_polarity(&mut self, polarity: AlertPolarity) -> Result<(), Error<E>> {
+    pub async fn set_alert_polarity(
+        &mut self,
+        polarity: AlertPolarity,
+    ) -> Result<(), Error<E>> {
         self.update_register::<MaskEnableRegister>(|mut reg| {
             reg.alert_polarity = polarity;
             reg
@@ -218,7 +221,10 @@ where
         Self::_read_register(self.address, &mut self.bus).await
     }
 
-    pub async fn write_register<R: WritableRegister>(&mut self, register: R) -> Result<(), Error<E>> {
+    pub async fn write_register<R: WritableRegister>(
+        &mut self,
+        register: R,
+    ) -> Result<(), Error<E>> {
         let reg_bytes = register.into_bytes();
         let to_write: [u8; 3] = [R::address().into(), reg_bytes[0], reg_bytes[1]];
         self.bus.write(self.address, &to_write).await.unwrap();

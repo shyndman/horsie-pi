@@ -3,13 +3,11 @@ runner = "espflash flash --monitor --flash-mode dio --flash-size 8mb"
 
 [build]
 rustflags = [
-  "-C",
-  "link-arg=-Wl,-Tlinkall.x",
-  # Required for WiFi
-  # "-C",
-  # "link-arg=-Trom_functions.x",
+  "-C", "link-arg=-Tlinkall.x",
   "-C", "link-arg=-nostartfiles",
   "-C", "link-arg=-Tdefmt.x",
+  # Required for WiFi
+# "-C", "link-arg=-Trom_functions.x",
 ]
 target = "xtensa-esp32s3-none-elf"
 

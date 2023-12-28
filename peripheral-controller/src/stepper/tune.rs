@@ -55,8 +55,8 @@ pub async fn tune_driver<M: RawMutex, P: esp_hal_common::uart::Instance>(
 
         // Stallguard
         let mut tpwnthrs = tmc2209::reg::TPWMTHRS::default();
-        // tpwnthrs.set(0xfffff); // This keeps the stepper in SpreadCycle mode
-        tpwnthrs.set(0); // This keeps the stepper in SpreadCycle mode
+        tpwnthrs.set(0xfffff); // This keeps the stepper in SpreadCycle mode
+        // tpwnthrs.set(0); // This keeps the stepper in StealthChop mode
         driver.write_register(tpwnthrs).await?;
 
         // Coolstep

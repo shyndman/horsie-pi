@@ -17,6 +17,17 @@ pub const NEMA8_S20STH30_0604A_CONSTANTS: MotorConstants = MotorConstants {
     rated_volts: 3.9,
 };
 
+/// NEMA 8: 8HY2001-10
+pub const NEMA8_8HY2001_10_CONSTANTS: MotorConstants = MotorConstants {
+    max_current_amps: 0.6,
+    run_current_amps: 0.4,
+    holding_torque_nm: 0.020,
+    phase_inductance_henries: 0.0015,
+    phase_resistance_ohms: 6.5,
+    steps_per_rotation: 200,
+    rated_volts: 3.9,
+};
+
 /// NEMA 11: 11HS18-0674S
 pub const NEMA11_11HS18_0674S_CONSTANTS: MotorConstants = MotorConstants {
     max_current_amps: 0.67,
